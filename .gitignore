@@ -1,0 +1,14 @@
+.gradle/
+.tools/
+.idea/
+**/build/
+local.properties
+*.iml
+*.jks
+*.keystore
+captures/
+
+# MCP configurations (contains API keys)
+mcp_config.json
+.agents/mcp_config.json
+.vscode/mcp.json

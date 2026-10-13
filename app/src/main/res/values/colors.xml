@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stitch Design System Color Tokens -->
+    <color name="primary">#00142F</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="primary_container">#0F294A</color>
+    <color name="on_primary_container">#7A91B7</color>
+
+    <color name="secondary">#145FAB</color>
+    <color name="on_secondary">#FFFFFF</color>
+    <color name="secondary_container">#D5E3FF</color>
+    <color name="on_secondary_container">#00407A</color>
+    <color name="secondary_fixed_dim">#A6C8FF</color>
+
+    <color name="tertiary">#00301F</color>
+    <color name="on_tertiary">#FFFFFF</color>
+    <color name="tertiary_container">#00301F</color>
+    <color name="on_tertiary_container">#24A375</color>
+
+    <!-- Surfaces & Backgrounds -->
+    <color name="surface">#FBF9F6</color>
+    <color name="surface_dim">#DBDAD7</color>
+    <color name="surface_variant">#E4E2DF</color>
+    <color name="surface_container_lowest">#FFFFFF</color>
+    <color name="surface_container_low">#F5F3F0</color>
+    <color name="surface_container">#EFEEEB</color>
+    <color name="surface_container_high">#EAE8E5</color>
+    <color name="surface_container_highest">#E4E2DF</color>
+
+    <color name="on_surface">#1B1C1A</color>
+    <color name="on_surface_variant">#44474E</color>
+
+    <color name="outline">#74777F</color>
+    <color name="outline_variant">#C4C6CF</color>
+    <color name="card_stroke">#E2E8F0</color>
+
+    <!-- System / Utility -->
+    <color name="white">#FFFFFF</color>
+    <color name="ink">#1B1C1A</color>
+    <color name="muted">#64748B</color>
+    <color name="divider">#E2E8F0</color>
+    <color name="error">#BA1A1A</color>
+    <color name="error_container">#FFDAD6</color>
+    <color name="on_error_container">#93000A</color>
+
+    <color name="badge_bg">#E8EEF8</color>
+    <color name="badge_text">#145FAB</color>
+    <color name="chip_bg">#F1F5F9</color>
+</resources>

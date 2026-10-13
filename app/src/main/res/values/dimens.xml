@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="page_gutter">16dp</dimen>
+    <dimen name="card_radius">16dp</dimen>
+    <dimen name="card_radius_large">20dp</dimen>
+    <dimen name="chip_radius">8dp</dimen>
+    <dimen name="item_spacing">12dp</dimen>
+    <dimen name="section_spacing">20dp</dimen>
+</resources>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="@dimen/page_gutter">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/sample_disclaimer" android:textColor="@color/secondary" android:textSize="14sp" />
+        <TextView android:id="@+id/article_title" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="12dp" android:fontFamily="serif"
+            android:breakStrategy="balanced" android:textColor="@color/primary" android:textSize="28sp" android:textStyle="bold" />
+        <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="12dp" android:scrollbars="none">
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:baselineAligned="false">
+                <com.google.android.material.button.MaterialButton android:id="@+id/action_share"
+                    style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:minHeight="48dp"
+                    android:text="@string/share_article" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/action_listen"
+                    style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginStart="8dp" android:minHeight="48dp" android:text="@string/action_listen" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/action_save"
+                    style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginStart="8dp" android:minHeight="48dp"
+                    android:text="@string/action_save_offline" />
+            </LinearLayout>
+        </HorizontalScrollView>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/reader_actions_pending" android:textColor="@color/on_surface_variant" android:textSize="14sp" />
+        <TextView android:id="@+id/article_body" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="24dp" android:fontFamily="serif"
+            android:lineSpacingExtra="6dp" android:textColor="@color/on_surface" android:textSize="16sp" />
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="24dp"
+            app:cardBackgroundColor="@color/surface_container" app:cardCornerRadius="@dimen/card_radius" app:strokeWidth="0dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="16dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/reader_license_title" android:textColor="@color/primary" android:textSize="16sp" android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
+                    android:text="@string/reader_source_note" android:textColor="@color/on_surface_variant" android:textSize="14sp" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/btn_view_original"
+                    style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/reader_view_original" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
