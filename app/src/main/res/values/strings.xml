@@ -7,7 +7,16 @@
     <string name="nav_settings">Cài đặt</string>
     <string name="nav_article">Bài viết</string>
     <string name="query_hint">Nhập từ khóa</string>
-    <string name="search_pending">Tìm kiếm Wikipedia chưa được nối. Bạn có thể xem giao diện bài mẫu bên dưới.</string>
+    <string name="search_loading">Đang tìm kiếm…</string>
+    <string name="search_empty_title">Không tìm thấy kết quả</string>
+    <string name="search_empty_message">Hãy thử từ khóa khác hoặc kiểm tra lại chính tả.</string>
+    <string name="search_error_title">Không thể tìm kiếm</string>
+    <string name="search_error_no_connection">Không có kết nối mạng. Hãy kiểm tra Wi-Fi hoặc dữ liệu di động rồi thử lại.</string>
+    <string name="search_error_timeout">Máy chủ phản hồi quá lâu. Hãy thử lại.</string>
+    <string name="search_error_server">Máy chủ Wikipedia đang gặp lỗi. Hãy thử lại sau.</string>
+    <string name="search_error_data">Dữ liệu nhận về không hợp lệ. Hãy thử lại.</string>
+    <string name="search_error_unknown">Đã xảy ra lỗi không xác định. Hãy thử lại.</string>
+    <string name="search_load_more_failed">Không tải thêm được kết quả.</string>
     <string name="sample_title">Văn Miếu – Quốc Tử Giám</string>
     <string name="sample_action">Xem bài viết mẫu</string>
     <string name="sample_disclaimer">Nội dung mẫu cục bộ, không phải bài viết tải từ Wikipedia.</string>

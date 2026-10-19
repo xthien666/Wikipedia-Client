@@ -129,14 +129,20 @@ public class MainActivityTest {
                 share.getStringExtra(android.content.Intent.EXTRA_TEXT));
     }
 
-    @Test public void pendingSearchKeepsQueryWithoutOpeningAnUnrelatedArticle() {
+    @Test public void submittedSearchKeepsQueryHidesSuggestionsAndOpensNoArticle() {
         MainActivity activity = launch();
         EditText input = activity.findViewById(R.id.query_input);
+        assertEquals(View.VISIBLE, activity.findViewById(R.id.search_suggestions).getVisibility());
         input.setText("Hà Nội");
         input.onEditorAction(android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH);
         idle();
         assertEquals(R.id.searchFragment, navigation(activity).getCurrentDestination().getId());
         assertEquals("Hà Nội", input.getText().toString());
+        // Whatever the network does (loading, results or error), the sample cards are replaced.
+        assertEquals(View.GONE, activity.findViewById(R.id.search_suggestions).getVisibility());
+        input.setText("");
+        idle();
+        assertEquals(View.VISIBLE, activity.findViewById(R.id.search_suggestions).getVisibility());
     }
 
     @Test public void favoriteFiltersCannotRestoreDeletedSamplesAndEmptyFiltersStayReachable() {
