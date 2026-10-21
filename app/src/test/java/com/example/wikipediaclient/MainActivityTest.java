@@ -166,38 +166,118 @@ public class MainActivityTest {
                 ((TextView) activity.findViewById(R.id.chip_fav_all)).getText().toString());
     }
 
-    @Test public void historyRemovalsAndCountsSurviveRecreationAndClearRequiresConfirmation() {
+    @Test public void historyShowsResolvedVisitsAndClearRequiresConfirmation() throws Exception {
         MainActivity activity = launch();
+        com.example.wikipediaclient.data.repository.HistoryRepository history =
+                ((WikiApplication) activity.getApplication()).getContainer().getHistoryRepository();
+        history.clear();
+        drainDisk(activity);
+        history.record(new com.example.wikipediaclient.data.model.HistoryEntry(
+                "vi", 10, "Bài A", "https://vi.wikipedia.org/wiki/Bai_A", 1000));
+        history.record(new com.example.wikipediaclient.data.model.HistoryEntry(
+                "vi", 11, "Bài B", "https://vi.wikipedia.org/wiki/Bai_B", 2000));
+        drainDisk(activity);
+        assertEquals(2, history.observe().getValue().getEntries().size());
+        assertTrue(activity.getSharedPreferences("reading_history", android.content.Context.MODE_PRIVATE)
+                .getString("entries", "").contains("Bài B"));
         ((BottomNavigationView) activity.findViewById(R.id.bottom_navigation)).setSelectedItemId(R.id.historyFragment);
-        idle();
-        activity.findViewById(R.id.btn_del_hist_1).performClick();
-        controller.recreate();
-        idle();
-        activity = controller.get();
-        assertEquals(View.GONE, activity.findViewById(R.id.card_history_1).getVisibility());
+        drainDisk(activity);
         assertEquals(activity.getString(R.string.history_saved_count, 2),
                 ((TextView) activity.findViewById(R.id.tv_history_count)).getText().toString());
+        androidx.recyclerview.widget.RecyclerView list = activity.findViewById(R.id.history_list);
+        assertEquals(2, list.getAdapter().getItemCount());
+        assertEquals("Bài B", ((TextView) list.getChildAt(0).findViewById(R.id.history_title))
+                .getText().toString());
+        list.getChildAt(0).findViewById(R.id.history_open).performClick();
+        idle();
+        assertEquals(R.id.articleFragment, navigation(activity).getCurrentDestination().getId());
+        assertEquals("Bài B", ((TextView) activity.findViewById(R.id.article_title)).getText().toString());
+        activity.getOnBackPressedDispatcher().onBackPressed();
+        idle();
+        assertEquals(R.id.historyFragment, navigation(activity).getCurrentDestination().getId());
+        list = activity.findViewById(R.id.history_list);
+
         activity.findViewById(R.id.btn_clear_history).performClick();
         idle();
         androidx.appcompat.app.AlertDialog dialog = (androidx.appcompat.app.AlertDialog)
                 org.robolectric.shadows.ShadowDialog.getLatestDialog();
-        assertNotNull(dialog);
         dialog.getButton(android.content.DialogInterface.BUTTON_NEGATIVE).performClick();
         idle();
-        assertEquals(View.VISIBLE, activity.findViewById(R.id.card_history_2).getVisibility());
+        assertEquals(2, list.getAdapter().getItemCount());
+
         activity.findViewById(R.id.btn_clear_history).performClick();
-        idle();
-        dialog = (androidx.appcompat.app.AlertDialog) org.robolectric.shadows.ShadowDialog.getLatestDialog();
-        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick();
         idle();
         controller.recreate();
         idle();
         activity = controller.get();
+        dialog = (androidx.appcompat.app.AlertDialog) org.robolectric.shadows.ShadowDialog.getLatestDialog();
+        assertTrue("Confirmation must survive rotation", dialog.isShowing());
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick();
+        drainDisk(activity);
+        controller.recreate();
+        idle();
+        activity = controller.get();
         assertEquals(View.VISIBLE, activity.findViewById(R.id.status).getVisibility());
-        assertEquals(View.GONE, activity.findViewById(R.id.card_history_2).getVisibility());
+        assertEquals(0, ((androidx.recyclerview.widget.RecyclerView)
+                activity.findViewById(R.id.history_list)).getAdapter().getItemCount());
         assertFalse(activity.findViewById(R.id.btn_clear_history).isEnabled());
     }
 
+    private void drainDisk(MainActivity activity) throws Exception {
+        ((WikiApplication) activity.getApplication()).getContainer().getDiskExecutor()
+                .submit(() -> {}).get();
+        idle();
+    }
+
+    @Test public void articleStackRestoresAAfterBAndIgnoresRepeatedOpen() {
+        MainActivity activity = launch();
+        activity.findViewById(R.id.open_sample).performClick();
+        idle();
+        String titleA = ((TextView) activity.findViewById(R.id.article_title)).getText().toString();
+        NavHostFragment host = (NavHostFragment) activity.getSupportFragmentManager()
+                .findFragmentById(R.id.nav_host_fragment);
+        androidx.fragment.app.Fragment article = host.getChildFragmentManager().getPrimaryNavigationFragment();
+        com.example.wikipediaclient.data.model.ArticleLocator locator =
+                new com.example.wikipediaclient.data.model.ArticleLocator("vi", "Bài B", 42L);
+        com.example.wikipediaclient.ui.navigation.ArticleNavigator.open(article, locator);
+        com.example.wikipediaclient.ui.navigation.ArticleNavigator.open(article, locator);
+        idle();
+        controller.recreate();
+        idle();
+        activity = controller.get();
+        assertEquals("Bài B", ((TextView) activity.findViewById(R.id.article_title)).getText().toString());
+        assertEquals(42L, navigation(activity).getCurrentBackStackEntry().getArguments().getLong("pageId"));
+        activity.getOnBackPressedDispatcher().onBackPressed();
+        idle();
+        assertEquals(titleA, ((TextView) activity.findViewById(R.id.article_title)).getText().toString());
+        activity.getOnBackPressedDispatcher().onBackPressed();
+        idle();
+        assertEquals(R.id.searchFragment, navigation(activity).getCurrentDestination().getId());
+    }
+
+    @Test public void corruptedHistoryOffersRetryAndConfirmedReset() throws Exception {
+        MainActivity activity = launch();
+        drainDisk(activity);
+        activity.getSharedPreferences("reading_history", android.content.Context.MODE_PRIVATE)
+                .edit().putString("entries", "broken-json").commit();
+        ((BottomNavigationView) activity.findViewById(R.id.bottom_navigation)).setSelectedItemId(R.id.historyFragment);
+        idle();
+        drainDisk(activity);
+        assertEquals(activity.getString(R.string.history_error_title),
+                ((TextView) activity.findViewById(R.id.status_title)).getText().toString());
+        activity.findViewById(R.id.status_action).performClick();
+        drainDisk(activity);
+        assertTrue(activity.findViewById(R.id.btn_clear_history).isEnabled());
+        activity.findViewById(R.id.btn_clear_history).performClick();
+        idle();
+        androidx.appcompat.app.AlertDialog dialog = (androidx.appcompat.app.AlertDialog)
+                org.robolectric.shadows.ShadowDialog.getLatestDialog();
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick();
+        drainDisk(activity);
+        assertEquals(activity.getString(R.string.history_empty_title),
+                ((TextView) activity.findViewById(R.id.status_title)).getText().toString());
+        assertFalse(activity.findViewById(R.id.btn_clear_history).isEnabled());
+    }
     @Test public void fontPreferenceSurvivesAColdLaunchAndAppliesToReader() {
         MainActivity activity = launch();
         ((BottomNavigationView) activity.findViewById(R.id.bottom_navigation)).setSelectedItemId(R.id.settingsFragment);

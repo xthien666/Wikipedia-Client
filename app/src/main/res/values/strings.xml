@@ -14,7 +14,7 @@
     <string name="library_empty_title">Giữ lại điều đáng nhớ</string>
     <string name="library_empty_message">Bạn đã xóa tất cả bài mẫu trong phiên này. Tính năng lưu yêu thích thật chưa được triển khai.</string>
     <string name="history_empty_title">Hành trình khám phá</string>
-    <string name="history_empty_message">Danh sách mẫu đã trống. Lịch sử đọc thật chưa được triển khai.</string>
+    <string name="history_empty_message">Các bài bạn đọc thành công sẽ xuất hiện ở đây.</string>
     <string name="retry">Thử lại</string>
 
     <!-- Stitch Design System Strings -->
@@ -70,13 +70,14 @@
     <string name="fav_habit_sub">Thông tin minh họa, chưa có thống kê đọc thực tế.</string>
 
     <!-- History Strings -->
-    <string name="history_saved_count">Danh sách mẫu: %1$d bài</string>
+    <string name="history_saved_count">Đã đọc: %1$d bài</string>
+    <string name="history_loading">Đang tải lịch sử…</string>
+    <string name="history_error_title">Không thể tải lịch sử</string>
+    <string name="history_error_message">Chưa đọc được dữ liệu trên thiết bị. Hãy thử lại; nếu lỗi còn tiếp diễn, bạn có thể chọn Xóa tất cả để đặt lại lịch sử.</string>
+    <string name="history_write_error_title">Chưa lưu được thay đổi</string>
+    <string name="history_write_error_message">Thay đổi lịch sử chưa được lưu. Hãy thử tải lại danh sách trước khi thực hiện lại thao tác.</string>
+    <string name="history_remove_article">Xóa %1$s khỏi lịch sử</string>
     <string name="history_clear_all">Xóa tất cả</string>
-    <string name="history_rhythm_stat">Thống kê minh họa</string>
-    <string name="history_rhythm_sub">Chưa ghi nhận thời gian đọc thực tế</string>
-    <string name="time_today">Hôm nay</string>
-    <string name="time_yesterday">Hôm qua</string>
-    <string name="history_privacy">Đây là danh sách mẫu. Thao tác xóa được giữ trong phiên; lịch sử đọc thực tế chưa được triển khai.</string>
 
     <!-- Settings Strings -->
     <string name="settings_section_reading">TRẢI NGHIỆM ĐỌC BÀI</string>
@@ -122,25 +123,10 @@
     <string name="option_selected">Đã chọn</string>
     <string name="option_not_selected">Chưa chọn</string>
     <string name="filter_empty_message">Không có bài mẫu trong thể loại này. Chọn Tất cả để xem các bài còn lại.</string>
-    <string name="history_confirm_title">Xóa toàn bộ danh sách mẫu?</string>
-    <string name="history_confirm_message">Xóa các bài mẫu trong phiên này. Đây chưa phải lịch sử đọc thực tế.</string>
+    <string name="history_confirm_title">Xóa toàn bộ lịch sử?</string>
+    <string name="history_confirm_message">Thao tác này xóa các bài đã đọc trên thiết bị và không thể hoàn tác.</string>
     <string name="remove">Xóa</string>
     <string name="cancel">Hủy</string>
-    <string name="sample_today">Hôm nay — minh họa (%1$d bài)</string>
-    <string name="sample_yesterday">Hôm qua — minh họa (%1$d bài)</string>
-    <string name="ui_fragment_history_1">🕒  Nhịp đọc tuần này</string>
-    <string name="ui_fragment_history_2">🏞️</string>
-    <string name="ui_fragment_history_3">Vịnh Hạ Long</string>
-    <string name="ui_fragment_history_4">🕒 Đã đọc lúc 14:20 · Đọc 8 phút</string>
-    <string name="ui_fragment_history_5">Xóa</string>
-    <string name="ui_fragment_history_6">🐢</string>
-    <string name="ui_fragment_history_7">Hồ Hoàn Kiếm</string>
-    <string name="ui_fragment_history_8">🕒 Đã đọc lúc 10:15 · Đọc 5 phút</string>
-    <string name="ui_fragment_history_9">Xóa</string>
-    <string name="ui_fragment_history_10">☀️</string>
-    <string name="ui_fragment_history_11">Hệ Mặt Trời</string>
-    <string name="ui_fragment_history_12">🕒 Đã đọc lúc 21:05 · Đọc 11 phút</string>
-    <string name="ui_fragment_history_13">Xóa</string>
     <string name="ui_fragment_library_1">🏞️</string>
     <string name="ui_fragment_library_2">Đã lưu 2 ngày trước</string>
     <string name="ui_fragment_library_3">ĐỊA LÝ &amp; DI SẢN</string>

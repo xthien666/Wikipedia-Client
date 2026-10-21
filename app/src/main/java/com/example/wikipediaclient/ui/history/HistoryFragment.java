@@ -4,57 +4,72 @@ import android.os.Bundle;
 import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.wikipediaclient.R;
-import com.example.wikipediaclient.data.model.ArticleLocator;
+import com.example.wikipediaclient.WikiApplication;
+import com.example.wikipediaclient.data.repository.HistoryState;
 import com.example.wikipediaclient.databinding.FragmentHistoryBinding;
-import com.example.wikipediaclient.ui.common.SampleListViewModel;
 import com.example.wikipediaclient.ui.navigation.ArticleNavigator;
 
 public final class HistoryFragment extends Fragment {
     private FragmentHistoryBinding binding;
-    private SampleListViewModel model;
+
     public HistoryFragment() { super(R.layout.fragment_history); }
-    @Override public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
-        super.onViewCreated(view, state);
+
+    @Override public void onViewCreated(@NonNull View view, @Nullable Bundle savedState) {
+        super.onViewCreated(view, savedState);
         binding = FragmentHistoryBinding.bind(view);
-        model = new ViewModelProvider(this).get(SampleListViewModel.class);
-        int[] titleIds = {R.string.reader_default_title, R.string.sample_hoan_kiem, R.string.sample_solar_system};
-        View[] cards = {binding.cardHistory1, binding.cardHistory2, binding.cardHistory3};
-        View[] remove = {binding.btnDelHist1, binding.btnDelHist2, binding.btnDelHist3};
-        for (int index = 0; index < cards.length; index++) {
-            final int id = index + 1;
-            final String title = getString(titleIds[index]);
-            cards[index].setOnClickListener(v -> ArticleNavigator.open(this, new ArticleLocator("vi", title, null)));
-            remove[index].setContentDescription(getString(R.string.remove_sample, title));
-            remove[index].setOnClickListener(v -> { model.remove(id); render(); });
-        }
-        binding.btnClearHistory.setOnClickListener(v -> new AlertDialog.Builder(requireContext())
-                .setTitle(R.string.history_confirm_title)
-                .setMessage(R.string.history_confirm_message)
-                .setPositiveButton(R.string.remove, (dialog, which) -> {
-                    for (int id = 1; id <= 3; id++) model.remove(id);
-                    if (binding != null) render();
-                })
-                .setNegativeButton(R.string.cancel, null).show());
-        render();
+        HistoryViewModel model = new ViewModelProvider(this, new HistoryViewModel.Factory(
+                ((WikiApplication) requireActivity().getApplication())
+                        .getContainer().getHistoryRepository())).get(HistoryViewModel.class);
+        HistoryAdapter adapter = new HistoryAdapter(new HistoryAdapter.Listener() {
+            @Override public void open(com.example.wikipediaclient.data.model.HistoryEntry entry) {
+                ArticleNavigator.open(HistoryFragment.this, entry.toLocator());
+            }
+            @Override public void remove(com.example.wikipediaclient.data.model.HistoryEntry entry) {
+                model.remove(entry);
+            }
+        });
+        binding.historyList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.historyList.setAdapter(adapter);
+        getChildFragmentManager().setFragmentResultListener(ClearHistoryDialogFragment.CONFIRMED,
+                getViewLifecycleOwner(), (key, result) -> model.clear());
+        binding.btnClearHistory.setOnClickListener(v -> {
+            if (getChildFragmentManager().findFragmentByTag(ClearHistoryDialogFragment.TAG) == null) {
+                new ClearHistoryDialogFragment().showNow(getChildFragmentManager(), ClearHistoryDialogFragment.TAG);
+            }
+        });
+        model.observe().observe(getViewLifecycleOwner(), state -> render(state, adapter, model));
+        model.refresh();
     }
-    private void render() {
-        int count = model.remaining(3);
-        binding.cardHistory1.setVisibility(model.isRemoved(1) ? View.GONE : View.VISIBLE);
-        binding.cardHistory2.setVisibility(model.isRemoved(2) ? View.GONE : View.VISIBLE);
-        binding.cardHistory3.setVisibility(model.isRemoved(3) ? View.GONE : View.VISIBLE);
-        int today = (model.isRemoved(1) ? 0 : 1) + (model.isRemoved(2) ? 0 : 1);
-        binding.historyToday.setText(getString(R.string.sample_today, today));
-        binding.historyToday.setVisibility(today == 0 ? View.GONE : View.VISIBLE);
-        binding.historyYesterday.setText(getString(R.string.sample_yesterday, model.isRemoved(3) ? 0 : 1));
-        binding.historyYesterday.setVisibility(model.isRemoved(3) ? View.GONE : View.VISIBLE);
+
+    private void render(HistoryState state, HistoryAdapter adapter, HistoryViewModel model) {
+        if (binding == null) return;
+        int count = state.getEntries().size();
         binding.tvHistoryCount.setText(getString(R.string.history_saved_count, count));
-        binding.btnClearHistory.setEnabled(count > 0);
-        binding.status.setVisibility(count == 0 ? View.VISIBLE : View.GONE);
-        if (count == 0) binding.status.showEmpty(R.drawable.ic_history, R.string.history_empty_title, R.string.history_empty_message);
+        binding.btnClearHistory.setEnabled(count > 0 || state.getKind() == HistoryState.Kind.ERROR);
+        binding.historyList.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
+        adapter.submit(state.getEntries());
+        if (state.getKind() == HistoryState.Kind.LOADING) {
+            binding.status.showLoading(R.string.history_loading);
+        } else if (state.getKind() == HistoryState.Kind.ERROR) {
+            boolean writeFailed = state.getFailure() == HistoryState.Failure.WRITE;
+            binding.status.showError(writeFailed ? R.string.history_write_error_title : R.string.history_error_title,
+                    getString(writeFailed ? R.string.history_write_error_message : R.string.history_error_message),
+                    model::refresh);
+        } else if (count == 0) {
+            binding.status.showEmpty(R.drawable.ic_history,
+                    R.string.history_empty_title, R.string.history_empty_message);
+        } else {
+            binding.status.setVisibility(View.GONE);
+        }
     }
-    @Override public void onDestroyView() { binding = null; super.onDestroyView(); }
+
+    @Override public void onDestroyView() {
+        binding.historyList.setAdapter(null);
+        binding = null;
+        super.onDestroyView();
+    }
 }
