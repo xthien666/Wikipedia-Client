@@ -49,6 +49,9 @@ public final class BookmarkAdapter extends ListAdapter<PersonalArticleEntry, Boo
         PersonalArticleEntry entry = getItem(position);
         PersonalArticle article = entry.getArticle();
         holder.binding.bookmarkTitle.setText(article.getTitle());
+        holder.binding.bookmarkSource.setText(R.string.bookmark_source);
+        holder.binding.bookmarkAvailability.setText(R.string.bookmark_availability);
+        holder.binding.getRoot().setOnClickListener(v -> listener.onOpen(article));
         holder.binding.bookmarkUrl.setText(article.getCanonicalUrl());
         String date = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
                 .format(new Date(entry.getTimestamp()));

@@ -38,6 +38,15 @@ public final class LibraryFragment extends Fragment implements BookmarkAdapter.L
         adapter.setStateRestorationPolicy(BookmarkAdapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY);
         binding.bookmarkList.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.bookmarkList.setAdapter(adapter);
+        binding.bookmarkList.setNestedScrollingEnabled(false);
+        binding.chipFavAll.setSelected(true);
+        binding.chipFavAll.setText(getString(R.string.bookmark_all, 0));
+        binding.chipFavAll.setOnClickListener(v -> model.refresh());
+        // Keep the team's filter controls, but do not infer categories from article titles.
+        binding.chipFavPlaces.setEnabled(false);
+        binding.chipFavScience.setEnabled(false);
+        binding.chipFavPlaces.setContentDescription(getString(R.string.bookmark_categories_unavailable));
+        binding.chipFavScience.setContentDescription(getString(R.string.bookmark_categories_unavailable));
         model.getState().observe(getViewLifecycleOwner(), this::render);
     }
 
@@ -47,7 +56,7 @@ public final class LibraryFragment extends Fragment implements BookmarkAdapter.L
     /** Shows one of loading, error, empty, or populated states. */
     private void render(LibraryViewModel.State state) {
         binding.bookmarkList.setVisibility(View.GONE);
-        binding.bookmarkCount.setVisibility(View.GONE);
+
         if (state.loading) {
             binding.status.showLoading(R.string.bookmark_loading);
         } else if (state.error) {
@@ -56,9 +65,7 @@ public final class LibraryFragment extends Fragment implements BookmarkAdapter.L
                     .setText(R.string.bookmark_retry);
         } else {
             adapter.submitList(state.entries);
-            binding.bookmarkCount.setText(getResources().getQuantityString(
-                    R.plurals.bookmark_count, state.entries.size(), state.entries.size()));
-            binding.bookmarkCount.setVisibility(View.VISIBLE);
+            binding.chipFavAll.setText(getString(R.string.bookmark_all, state.entries.size()));
             if (state.entries.isEmpty()) {
                 binding.status.showEmpty(R.drawable.ic_bookmark, R.string.bookmark_empty_title, R.string.bookmark_empty_message);
             } else {

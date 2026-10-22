@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="bookmark_banner_title">Saved articles</string>
+    <string name="bookmark_all">All (%1$d)</string>
+    <string name="bookmark_places">Places</string>
+    <string name="bookmark_science">Science</string>
+    <string name="bookmark_categories_unavailable">Category filters are unavailable until article categories are provided.</string>
+    <string name="bookmark_habit_title">Keep reading</string>
+    <string name="bookmark_habit_message">Return to your saved articles whenever you want to read more.</string>
+    <string name="bookmark_cover">W</string>
+    <string name="bookmark_source">WIKIPEDIA · VI</string>
+    <string name="bookmark_availability">Online article</string>
     <string name="bookmark_retry">Try again</string>
-    <string name="bookmark_network_notice">Saved articles are links, not offline copies. An internet connection is needed to read them.</string>
+    <string name="bookmark_network_notice">Saved articles require an internet connection to read. Category filters are not available yet.</string>
     <string name="bookmark_loading">Loading saved articles…</string>
     <string name="bookmark_error_title">Could not update saved articles</string>
     <string name="bookmark_error_message">Your changes could not be completed. Please try again.</string>
