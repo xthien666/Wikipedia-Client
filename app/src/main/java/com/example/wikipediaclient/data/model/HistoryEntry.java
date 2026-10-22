@@ -10,7 +10,7 @@ public final class HistoryEntry {
 
     public HistoryEntry(String language, long pageId, String title, String canonicalUrl, long lastReadAt) {
         if (!"vi".equals(language) || pageId <= 0 || title == null || title.trim().isEmpty()
-                || canonicalUrl == null || canonicalUrl.trim().isEmpty() || lastReadAt <= 0) {
+                || canonicalUrl == null || canonicalUrl.trim().isEmpty() || lastReadAt < 0) {
             throw new IllegalArgumentException("Resolved article metadata and read time are required.");
         }
         this.language = language;

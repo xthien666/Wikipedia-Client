@@ -17,8 +17,13 @@ public final class AppContainer {
     private final com.example.wikipediaclient.data.local.ReaderSettings readerSettings;
     private final BookmarkRepository bookmarkRepository;
     private final HistoryRepository historyRepository;
-    /** Creates shared services without opening the database or starting networking. */
+    /** Creates shared services; history initializes on the disk executor and networking remains lazy. */
     public AppContainer(Context context) {
+        this(context, null);
+    }
+    /** Allows deterministic UI tests to supply a search repository without real networking. */
+    public AppContainer(Context context, com.example.wikipediaclient.data.repository.SearchRepository searchRepository) {
+        this.searchRepository = searchRepository;
         applicationContext = context.getApplicationContext();
         readerSettings = new com.example.wikipediaclient.data.local.ReaderSettings(applicationContext);
         WikiDatabaseHelper database = new WikiDatabaseHelper(applicationContext);
@@ -29,6 +34,27 @@ public final class AppContainer {
     public synchronized RequestQueue getRequestQueue() {
         if (requestQueue == null) requestQueue = Volley.newRequestQueue(applicationContext);
         return requestQueue;
+    }
+    private com.example.wikipediaclient.data.remote.WikipediaApi wikipediaApi;
+    private com.example.wikipediaclient.data.repository.SearchRepository searchRepository;
+    private com.example.wikipediaclient.data.repository.ArticleRepository articleRepository;
+    private synchronized com.example.wikipediaclient.data.remote.WikipediaApi getWikipediaApi() {
+        if (wikipediaApi == null) {
+            wikipediaApi = new com.example.wikipediaclient.data.remote.WikipediaApi(getRequestQueue());
+        }
+        return wikipediaApi;
+    }
+    public synchronized com.example.wikipediaclient.data.repository.SearchRepository getSearchRepository() {
+        if (searchRepository == null) {
+            searchRepository = new com.example.wikipediaclient.data.repository.RemoteSearchRepository(getWikipediaApi());
+        }
+        return searchRepository;
+    }
+    public synchronized com.example.wikipediaclient.data.repository.ArticleRepository getArticleRepository() {
+        if (articleRepository == null) {
+            articleRepository = new com.example.wikipediaclient.data.repository.RemoteArticleRepository(getWikipediaApi());
+        }
+        return articleRepository;
     }
     /** Returns the existing reader settings service. */
     public com.example.wikipediaclient.data.local.ReaderSettings getReaderSettings() { return readerSettings; }

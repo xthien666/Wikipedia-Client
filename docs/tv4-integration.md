@@ -1,6 +1,6 @@
 # TV4 integration
 
-Bookmark and history storage are ready. The library uses real saved data. The reader save action and history screen still need to be connected.
+Bookmark and history storage are integrated with TV1's history UI. The library uses real saved data. The reader save action and successful-read callback still need to be connected by TV3.
 
 ## Shared access
 
@@ -11,7 +11,7 @@ AppContainer container = ((WikiApplication) requireActivity()
         .getApplication()).getContainer();
 ```
 
-Run all repository calls on `container.getDiskExecutor()`. They reject main-thread access. Catch failures in the ViewModel and update UI state on the main thread. Do not close the shared database from a screen.
+BookmarkRepository is blocking: run its calls on `container.getDiskExecutor()`, catch failures in the ViewModel and publish UI state on the main thread. HistoryRepository is asynchronous: it schedules disk operations internally and exposes LiveData. Do not close the shared database from a screen.
 
 ## TV3 — reader
 
@@ -30,25 +30,24 @@ Through `container.getBookmarkRepository()`:
 
 Keep the article identity attached to each operation. If the user switches articles before it finishes, do not apply the old result to the new article's save button.
 
-After the full article is displayed successfully, capture the time and call `recordRead(article, displayedAt)` through `container.getHistoryRepository()` on the disk executor. Use epoch milliseconds. Do not record history on a search click, summary response, failed load, or screen recreation alone.
+After the full article is displayed successfully, capture the time and call `container.getHistoryRepository().recordRead(article, displayedAt)`. This call schedules its own disk work. Use epoch milliseconds. Do not record history on a search click, summary response, failed load, or screen recreation alone. Observe history state for write failures.
 
 ## TV1 — history screen
 
-Replace the sample list with `container.getHistoryRepository()`:
+The history UI already uses `container.getHistoryRepository()`:
 
-- `getHistory()` — returns `List<PersonalArticleEntry>`, newest first.
-- `removeHistory("vi", pageId)` — delete one entry.
-- `clearHistory()` — delete all history after confirmation.
+- `observe()` — LiveData of immutable HistoryState snapshots, newest first.
+- `refresh()` — reload on entering the history screen.
+- `remove("vi", pageId)` — asynchronously delete one entry.
+- `clear()` — asynchronously delete all history after confirmation.
 
-Each entry exposes `getArticle()` and `getTimestamp()` (last-read time). Reload after deletion and when returning from the reader. Open a row on the main thread using the existing navigator:
+Each HistoryEntry exposes resolved metadata, `getLastReadAt()` and `toLocator()`. Writes publish a new snapshot automatically. Open a row on the main thread using the existing navigator:
 
 ```java
-PersonalArticle article = entry.getArticle();
-ArticleNavigator.open(this, new ArticleLocator(
-        article.getLanguage(), article.getTitle(), article.getPageId()));
+ArticleNavigator.open(this, entry.toLocator());
 ```
 
-Here, `this` is the history Fragment. `PersonalArticle` and `PersonalArticleEntry` are in `data.model`; `ArticleNavigator` is in `ui.navigation`.
+Here, `this` is the history Fragment. HistoryEntry is in `data.model`; ArticleNavigator is in `ui.navigation`. SqliteHistoryStore contains TV4's blocking history operations; screens use the asynchronous HistoryRepository facade.
 
 ## Storage behavior
 
@@ -57,3 +56,4 @@ Here, `this` is the history Fragment. `PersonalArticle` and `PersonalArticleEntr
 - Reading again updates the existing history row; older timestamps are ignored.
 - Clearing history does not remove bookmarks.
 - Only metadata is stored. Reading articles still requires a network connection.
+- TV1's legacy SharedPreferences history is validated and imported in a transaction. The old entries are removed only after import succeeds; malformed input remains available for retry or an explicitly confirmed reset.

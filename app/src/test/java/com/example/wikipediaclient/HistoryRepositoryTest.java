@@ -9,6 +9,11 @@ import com.example.wikipediaclient.data.local.LocalHistoryRepository;
 import com.example.wikipediaclient.data.model.HistoryEntry;
 import com.example.wikipediaclient.data.repository.HistoryState;
 import org.junit.Test;
+import org.junit.Before;
+import org.junit.After;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
@@ -16,9 +21,25 @@ import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28)
+@Config(sdk = 28, application = android.app.Application.class)
 public class HistoryRepositoryTest {
+    private ExecutorService disk;
+    @Before public void setup() {
+        disk = Executors.newSingleThreadExecutor();
+        RuntimeEnvironment.getApplication().deleteDatabase("personal_articles.db");
+        RuntimeEnvironment.getApplication().getSharedPreferences("reading_history", Context.MODE_PRIVATE)
+                .edit().clear().commit();
+    }
+    @After public void cleanup() throws Exception {
+        disk.shutdown();
+        assertTrue(disk.awaitTermination(10, TimeUnit.SECONDS));
+    }
+    private void drain() {
+        try { disk.submit(() -> {}).get(10, TimeUnit.SECONDS); }
+        catch (Exception error) { throw new AssertionError(error); }
+    }
     private HistoryState state(LiveData<HistoryState> liveData) {
+        drain();
         Shadows.shadowOf(Looper.getMainLooper()).idle();
         return liveData.getValue();
     }
@@ -28,7 +49,7 @@ public class HistoryRepositoryTest {
         android.content.SharedPreferences preferences = context.getSharedPreferences(
                 "reading_history", Context.MODE_PRIVATE);
         preferences.edit().putString("entries", "broken-json").commit();
-        LocalHistoryRepository repository = new LocalHistoryRepository(context, Runnable::run);
+        LocalHistoryRepository repository = new LocalHistoryRepository(context, disk);
         assertEquals(HistoryState.Failure.LOAD, state(repository.observe()).getFailure());
         repository.record(new HistoryEntry("vi", 1, "A", "https://vi.wikipedia.org/wiki/A", 100));
         assertEquals(HistoryState.Failure.WRITE, state(repository.observe()).getFailure());
@@ -44,7 +65,7 @@ public class HistoryRepositoryTest {
         context.getSharedPreferences("reading_history", Context.MODE_PRIVATE).edit().clear().commit();
         context.getSharedPreferences("other_data", Context.MODE_PRIVATE).edit()
                 .putString("bookmark", "saved").commit();
-        LocalHistoryRepository repository = new LocalHistoryRepository(context, Runnable::run);
+        LocalHistoryRepository repository = new LocalHistoryRepository(context, disk);
         repository.record(new HistoryEntry("vi", 1, "A", "https://vi.wikipedia.org/wiki/A", 100));
         repository.record(new HistoryEntry("vi", 2, "B", "https://vi.wikipedia.org/wiki/B", 200));
         repository.record(new HistoryEntry("vi", 1, "A mới", "https://vi.wikipedia.org/wiki/A_moi", 300));
@@ -54,8 +75,9 @@ public class HistoryRepositoryTest {
         assertEquals("A mới", current.getEntries().get(0).getTitle());
         assertEquals(1, current.getEntries().get(0).getPageId());
 
-        LocalHistoryRepository reopened = new LocalHistoryRepository(context, Runnable::run);
+        LocalHistoryRepository reopened = new LocalHistoryRepository(context, disk);
         assertEquals(2, state(reopened.observe()).getEntries().size());
+        assertFalse(context.getSharedPreferences("reading_history", Context.MODE_PRIVATE).contains("entries"));
         reopened.remove("vi", 1);
         assertEquals(2, state(repository.observe()).getEntries().size());
         assertEquals(1, state(reopened.observe()).getEntries().size());

@@ -1,21 +1,21 @@
 # WikiRead — Wikipedia Client
 
-Ứng dụng Android phục vụ đồ án nhóm 5 thành viên, hướng tới tìm kiếm, đọc và quản lý bài viết Wikipedia tiếng Việt. Mã nguồn hiện tại là bản **prototype 0.1.0**: khung ứng dụng và UI lịch sử đã sẵn sàng; API tìm kiếm và reader thật chưa được tích hợp.
+Ứng dụng Android phục vụ đồ án nhóm 5 thành viên, hướng tới tìm kiếm, đọc và quản lý bài viết Wikipedia tiếng Việt. Mã nguồn hiện tại là bản **prototype 0.1.0**: đã tích hợp tìm kiếm Wikipedia thật, kho SQLite cho yêu thích/lịch sử và UI danh sách; reader đầy đủ vẫn đang chờ tích hợp.
 
 ## Trạng thái chức năng
 
 | Chức năng | Hiện trạng |
 |---|---|
 | Điều hướng | Bốn tab Khám phá, Yêu thích, Lịch sử, Cài đặt; mở màn hình bài mẫu và quay lại |
-| Ô tìm kiếm | Nhập/xóa từ khóa, chọn chủ đề và giữ query khi tạo lại Activity; chưa gọi API tìm kiếm |
+| Ô tìm kiếm | API Wikipedia tiếng Việt, snippet dạng chữ, debounce và phím tìm kiếm, tải thêm có chống trùng; hủy/bỏ qua response cũ và giữ query qua lifecycle |
 | Đọc bài | Hiển thị tên bài được chọn và lời hướng dẫn cục bộ; chưa tải nội dung Wikipedia |
 | Liên kết bài | Mở trang tương ứng bằng trình duyệt; chia sẻ liên kết bằng Android Intent |
-| Yêu thích | Danh sách minh họa, lọc thể loại và xóa từng thẻ; chưa lưu yêu thích thật |
+| Yêu thích | Kho SQLite bền vững, danh sách thật, mở/xóa có xác nhận; chờ nối nút lưu trong reader, bộ lọc thể loại chưa có metadata nên bị vô hiệu hóa |
 | Lịch sử | Danh sách động từ kho lưu cục bộ, mới nhất trước; mở lại, xóa từng bài hoặc xóa tất cả có xác nhận; reader thật chưa gọi ghi nhận bài đã đọc |
 | Cỡ chữ | Bốn mức, lưu bằng SharedPreferences và áp dụng cho preview lẫn reader mẫu |
-| Loading, rỗng, lỗi | Có StatusView dùng chung; trạng thái lỗi mạng/thử lại chưa được tích hợp với API |
+| Loading, rỗng, lỗi | StatusView cho tìm kiếm, yêu thích và lịch sử; tìm kiếm có retry khi lỗi và retry tải thêm mà giữ kết quả đã tải |
 
-Thao tác xóa/lọc danh sách yêu thích mẫu được giữ qua việc tạo lại màn hình và Activity bằng SavedStateHandle, không cam kết còn sau force-stop. Dữ liệu lịch sử và cỡ chữ được lưu bền vững. Lịch sử bắt đầu trống vì bản mẫu chưa đọc bài thật; màn hình bài mẫu không tự tạo bản ghi giả. Nghe tóm tắt, lưu bài và xóa cache đang bị vô hiệu hóa vì chưa triển khai. Bản hiện tại chưa hỗ trợ đọc ngoại tuyến.
+Dữ liệu yêu thích/lịch sử được lưu trong hai bảng SQLite riêng, khóa duy nhất `language + pageId`; cỡ chữ được lưu bằng SharedPreferences. Lịch sử cũ của TV1 được chuyển sang SQLite khi đọc kho lần đầu, giữ bản cũ nếu chưa chuyển thành công. Yêu thích và lịch sử bắt đầu trống vì reader chưa lưu/đọc bài thật; màn hình bài mẫu không tự tạo bản ghi giả. Nghe tóm tắt, nút lưu bài trong reader và xóa cache đang bị vô hiệu hóa vì chưa triển khai. Bản hiện tại chưa hỗ trợ đọc ngoại tuyến.
 
 ## Công nghệ và cấu hình
 
@@ -33,8 +33,8 @@ Các phiên bản dưới đây lấy từ cấu hình build trong repository.
 | Material Components | 1.13.0 |
 | Navigation Component | 2.9.7 |
 | Lifecycle | 2.9.4 |
-| Volley | 1.2.1; đã chuẩn bị RequestQueue, chưa nối API |
-| Lưu thiết lập/lịch sử | SharedPreferences; lịch sử được xử lý trên Executor riêng |
+| Volley | 1.2.1; Action API tìm kiếm và REST summary |
+| Lưu dữ liệu cá nhân | SQLiteOpenHelper cho yêu thích/lịch sử; SharedPreferences cho cỡ chữ; truy cập DB trên Executor riêng |
 | Kiểm thử | JUnit 4.13.2, Robolectric 4.17; suite chạy API 28 |
 
 Module ứng dụng: `app`. Namespace và application ID: `com.example.wikipediaclient`.
@@ -115,15 +115,17 @@ $adb = Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe'
 python tools/test-tv1-device.py --adb $adb --serial emulator-5554
 ```
 
-Thay `emulator-5554` bằng serial thực tế. Script cần Python 3 và APK debug đã cài; kiểm tra UI bằng cây accessibility, lưu screenshot/JSON/log tại `build/tv1-device`. Script tạm đưa dữ liệu kiểm thử vào lịch sử rồi khôi phục dữ liệu ban đầu và thiết lập xoay trong `finally`; bản sao dự phòng nằm trong `history-backup.json` nếu tiến trình bị ngắt đột ngột. Để thiết bị mở khóa và không thao tác đồng thời trong lúc chạy test.
+Thay `emulator-5554` bằng serial thực tế. Script cần Python 3, APK debug đã cài và mạng tới Wikipedia; kiểm tra UI bằng cây accessibility, lưu screenshot/JSON/log tại `build/tv1-device`. Script tạm đưa fixture vào lịch sử và SQLite rồi khôi phục database, preferences và thiết lập xoay trong `finally`; bản sao dự phòng nhị phân được mã hóa base64 trong `history-backup.json` nếu tiến trình bị ngắt đột ngột. Để thiết bị mở khóa và không thao tác đồng thời trong lúc chạy test.
 
 ## Kiểm thử và CI
 
-Ngày 21/10/2026, `assembleDebug`, `lintDebug` và `testDebugUnitTest` chạy thành công; **15/15 test đạt**, Lint không có lỗi chặn. APK đã cài và chạy trên emulator `medium_phone`, Android 16/API 36; **8/8 nhóm kiểm tra ADB đạt**. Bản sao mã nguồn sạch, không kèm `local.properties`, `.tools` hoặc output cũ, cũng build được trên cùng máy. Chưa xác nhận build trên máy khác.
+Ngày 22/10/2026, bản tích hợp TV1/TV2/TV4 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **41/41 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle và tính bền vững của SQLite. Bản sao mã nguồn sạch từng build được trên cùng máy trước lần tích hợp này; chưa xác nhận build trên máy khác.
 
-Bộ [MainActivityTest](app/src/test/java/com/example/wikipediaclient/MainActivityTest.java) kiểm tra điều hướng/Back, giữ query và saved state, tính nhất quán của bài mẫu, nội dung Intent chia sẻ, lọc danh sách yêu thích mẫu, UI lịch sử, lưu cỡ chữ, icon thanh hệ thống và việc không áp dụng khoảng đệm bàn phím hai lần. [HistoryRepositoryTest](app/src/test/java/com/example/wikipediaclient/HistoryRepositoryTest.java) kiểm tra chống trùng, thứ tự, mở lại dữ liệu và xóa lịch sử không đụng đến dữ liệu khác.
+Bộ [MainActivityTest](app/src/test/java/com/example/wikipediaclient/MainActivityTest.java) kiểm tra điều hướng/Back, giữ query và saved state, tính nhất quán của bài mẫu, Intent chia sẻ, thư viện rỗng, UI lịch sử, lưu cỡ chữ, icon thanh hệ thống và khoảng đệm bàn phím. [HistoryRepositoryTest](app/src/test/java/com/example/wikipediaclient/HistoryRepositoryTest.java) kiểm tra chống trùng, thứ tự và dữ liệu bền vững. [PersonalStorageTest](app/src/test/java/com/example/wikipediaclient/PersonalStorageTest.java) kiểm tra chuyển dữ liệu cũ, bảo vệ metadata mới, giữ bookmark khi xóa history và chặn truy cập DB trên main thread. Các test UI dùng repository tìm kiếm giả; test ADB mới đi qua Volley/API thật.
 
-Robolectric chạy API 28. Lần kiểm tra ADB hiện tại bao phủ lịch sử với fixture, mở bài/Back, xóa và khởi động lại, hủy/xác nhận xóa qua xoay máy, phục hồi dữ liệu lỗi, query qua xoay máy/đổi tab và khôi phục màn hình sau `am kill` khi app ở nền. Đã kiểm tra process dừng trước khi trở lại task. Các kết quả này áp dụng cho prototype; chưa bao phủ thiết bị thật, TalkBack, tablet hoặc API/WebView Wikipedia thật.
+Robolectric chạy API 28. Kiểm thử ADB dùng emulator `medium_phone`, Android 16/API 36 và fixture được gắn nhãn rõ ràng cho dữ liệu cá nhân. Reader vẫn là prototype; kiểm thử mở bài xác nhận đúng metadata và điều hướng, chưa xác nhận HTML/WebView toàn bài. Chưa bao phủ thiết bị thật, TalkBack hoặc tablet.
+
+Ngày 22/10/2026, **11/11 nhóm kiểm tra ADB đạt** trên APK tích hợp: lịch sử đúng thứ tự/mở bài/Back; xóa bền vững; xác nhận xóa qua xoay máy; phục hồi JSON cũ bị lỗi; bookmark mở/xóa/hủy và giữ sau khởi động lại; xóa history giữ bookmark; tìm kiếm Wikipedia thật và tải thêm; giữ query qua xoay/Back/đổi tab; khôi phục đúng màn hình sau khi process thật sự dừng; không phát sinh crash. Script xác minh SHA-256 APK và khôi phục chính xác database/preferences trước khi mở lại app.
 
 [Workflow Android build](.github/workflows/android.yml) chạy khi push lên `main` hoặc mở pull request, sử dụng JDK 17 và ba task `assembleDebug`, `lintDebug`, `testDebugUnitTest`. Xem kết quả từng lần chạy tại [GitHub Actions](https://github.com/xthien666/Wikipedia-Client/actions).
 
@@ -139,7 +141,7 @@ app/src/main/
 │   │   ├── model/                # ArticleLocator, HistoryEntry
 │   │   ├── local/                # ReaderSettings, LocalHistoryRepository
 │   │   ├── remote/               # Package chuẩn bị cho API
-│   │   └── repository/           # Hợp đồng HistoryRepository; chờ API và dữ liệu yêu thích
+│   │   └── repository/           # API tìm kiếm/summary, SQLite bookmark và history
 │   └── ui/
 │       ├── navigation/
 │       ├── common/               # StatusView, SampleListViewModel
@@ -153,11 +155,11 @@ app/src/test/                     # Unit tests Robolectric
 .github/workflows/                # Kiểm tra tự động trên GitHub
 ```
 
-`AppContainer` cung cấp Volley RequestQueue dùng application context, Executor cho tác vụ blocking, ReaderSettings và HistoryRepository. SearchViewModel giữ query; SampleListViewModel chỉ còn phục vụ danh sách yêu thích mẫu. API và database chung của nhóm chưa được triển khai.
+`AppContainer` cung cấp Volley RequestQueue dùng application context, Executor cho tác vụ blocking, ReaderSettings, SearchRepository, ArticleRepository, BookmarkRepository và HistoryRepository. SearchViewModel giữ query bằng SavedStateHandle; LibraryViewModel tải dữ liệu SQLite ngoài main thread. ArticleRepository hiện trả summary và metadata; chưa trả HTML toàn bài cho reader.
 
 ### Hợp đồng lịch sử để tích hợp reader
 
-`HistoryRepository` nằm trong `data/repository`, hiện dùng `LocalHistoryRepository` để TV1 hoàn thiện UI độc lập. Sau khi reader hiển thị **thành công nội dung thật**, TV3 gọi `getHistoryRepository().record(new HistoryEntry("vi", resolvedPageId, resolvedTitle, canonicalUrl, System.currentTimeMillis()))`. Dùng metadata của response cuối sau redirect; không ghi khi chỉ mở màn hình mẫu hoặc khi tải bài lỗi. Màn hình lịch sử quan sát trạng thái loading/ready/error và có nút thử lại khi đọc lỗi. Dữ liệu chỉ là metadata; mở bài vẫn cần mạng. TV4 có thể thay implementation trong `AppContainer` bằng DB nhưng giữ interface này hoặc cập nhật bên dùng cùng một thay đổi.
+`HistoryRepository` nằm trong `data/repository`, được nối với SQLite của TV4 qua lớp `data/local/LocalHistoryRepository`. Sau khi reader hiển thị **thành công nội dung thật**, TV3 gọi `getHistoryRepository().recordRead(new PersonalArticle("vi", resolvedPageId, resolvedTitle, canonicalUrl), System.currentTimeMillis())`. Lời gọi lịch sử này tự chạy trên disk executor; UI quan sát `observe()` để nhận loading/ready/error. Dùng metadata của response cuối sau redirect; không ghi khi chỉ mở màn hình mẫu, nhận summary hoặc tải bài lỗi. Các lời gọi BookmarkRepository vẫn là blocking và phải chạy trên `getDiskExecutor()`. Chi tiết hợp đồng chung: [TV4 integration](docs/tv4-integration.md).
 
 ## Phân công và tích hợp
 
@@ -177,9 +179,9 @@ Không commit SDK/JDK cục bộ, `local.properties`, output build, khóa ký, t
 
 ## Phần triển khai tiếp theo
 
-- Nối tìm kiếm và tải nội dung Wikipedia tiếng Việt thật; xử lý phân trang, lỗi mạng và response hết hiệu lực.
+- Nối API nội dung toàn bài với reader; bổ sung kiểm thử mất mạng/redirect trên nội dung thật.
 - Thay reader mẫu bằng HTML/WebView; giữ nội dung và metadata cùng bài khi chuyển link, redirect và Back.
-- Nối reader thật với `HistoryRepository.record()` sau khi hiển thị thành công; tích hợp repository/database yêu thích của TV4.
+- Nối reader thật với `HistoryRepository.recordRead()` sau khi hiển thị thành công và với BookmarkRepository để thêm/bỏ yêu thích.
 - Tích hợp nguồn/giấy phép theo metadata, cỡ chữ hiện có và các ca kiểm thử lifecycle trên reader thật.
 
-Ứng dụng là đồ án học tập của nhóm, không phải ứng dụng chính thức của Wikimedia. Bản mẫu chưa tải nội dung Wikipedia; giấy phép nội dung cần được xác định và hiển thị đúng khi tích hợp dữ liệu thật.
+Ứng dụng là đồ án học tập của nhóm, không phải ứng dụng chính thức của Wikimedia. Reader mẫu chưa tải toàn bài Wikipedia; nguồn và giấy phép nội dung cần được tích hợp đầy đủ khi nối reader thật.

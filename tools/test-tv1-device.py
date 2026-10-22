@@ -4,12 +4,14 @@ Requires Python 3, a debug APK already installed, and an unlocked ADB target.
 Example: python tools/test-tv1-device.py --adb PATH_TO_ADB --serial emulator-5554
 """
 import argparse
+import base64
 import datetime
 import hashlib
 import json
 import pathlib
 import re
 import subprocess
+import sqlite3
 import sys
 import time
 import xml.etree.ElementTree as ET
@@ -27,6 +29,8 @@ package = "com.example.wikipediaclient"
 prefix = package + ":id/"
 report = {"serial": args.serial, "started": datetime.datetime.now().astimezone().isoformat(), "checks": []}
 sequence = 0
+database_files = ("personal_articles.db", "personal_articles.db-wal",
+                  "personal_articles.db-shm", "personal_articles.db-journal")
 
 
 def adb(*command, data=None, check=True):
@@ -106,6 +110,9 @@ def stop():
 
 def set_history(value):
     stop()
+    # Isolate each legacy-migration fixture from the previous SQLite test state.
+    for name in database_files:
+        shell("run-as", package, "rm", "-f", "databases/" + name)
     document = ET.Element("map")
     ET.SubElement(document, "string", name="entries").text = value
     shell("run-as", package, "mkdir", "-p", "shared_prefs")
@@ -137,14 +144,18 @@ try:
     for key in ("accelerometer_rotation", "user_rotation"):
         rotation[key] = shell("settings", "get", "system", key)
     stop()
-    for name in ("reading_history.xml", "reading_history.xml.bak"):
-        result = adb("exec-out", "run-as", package, "cat", "shared_prefs/" + name, check=False)
+    paths = ["shared_prefs/" + name for name in ("reading_history.xml", "reading_history.xml.bak")]
+    paths += ["databases/" + name for name in database_files]
+    for name in paths:
+        result = adb("exec-out", "run-as", package, "cat", name, check=False)
         backup[name] = result.stdout if result.returncode == 0 else None
         if result.returncode and b"No such file" not in result.stderr + result.stdout:
             raise RuntimeError("Cannot back up app history: " + result.stderr.decode("utf-8", "replace"))
     # Persist a recovery copy before writing fixtures, including when this script is interrupted.
     (output / "history-backup.json").write_text(json.dumps(
-        {name: None if value is None else value.decode("utf-8") for name, value in backup.items()},
+        {"encoding": "base64", "files": {
+            name: None if value is None else base64.b64encode(value).decode("ascii")
+            for name, value in backup.items()}},
         ensure_ascii=False), encoding="utf-8")
     now = int(time.time() * 1000)
     fixture = [dict(language="vi", pageId=1, title="Bài A kiểm thử", canonicalUrl="https://vi.wikipedia.org/wiki/A", lastReadAt=now-10000),
@@ -194,6 +205,51 @@ try:
     require("status_title", "Hành trình khám phá")
     passed("Corrupt history shows retry and recovers after confirmed reset")
 
+    # Exercise TV4's populated library without claiming the unfinished reader can save articles.
+    stop()
+    fixture_db = output / "fixture-personal_articles.db"
+    if fixture_db.exists():
+        fixture_db.unlink()
+    with sqlite3.connect(fixture_db) as db:
+        for table, timestamp in (("bookmarks", "saved_at"), ("history", "last_read_at")):
+            db.execute(f"CREATE TABLE {table} (language TEXT NOT NULL, page_id INTEGER NOT NULL, "
+                       f"title TEXT NOT NULL, canonical_url TEXT NOT NULL, {timestamp} INTEGER NOT NULL, "
+                       "PRIMARY KEY (language, page_id))")
+            for row in fixture:
+                db.execute(f"INSERT INTO {table} VALUES (?, ?, ?, ?, ?)",
+                           (row["language"], row["pageId"], row["title"], row["canonicalUrl"], row["lastReadAt"]))
+        db.execute("PRAGMA user_version=1")
+    shell("run-as", package, "mkdir", "-p", "databases")
+    for name in database_files:
+        shell("run-as", package, "rm", "-f", "databases/" + name)
+    adb("shell", "run-as", package, "tee", "databases/personal_articles.db", data=fixture_db.read_bytes())
+    launch()
+    tap("libraryFragment")
+    require("chip_fav_all", "All (2)")
+    shot("bookmarks-populated")
+    tap(description="Read Bài B kiểm thử")
+    require("article_title", "Bài B kiểm thử")
+    shell("input", "keyevent", "4")
+    tap(description="Remove Bài B kiểm thử from saved articles")
+    tap("android:id/button2")
+    require("chip_fav_all", "All (2)")
+    tap(description="Remove Bài B kiểm thử from saved articles")
+    tap("android:id/button1")
+    require("chip_fav_all", "All (1)")
+    stop()
+    launch()
+    tap("libraryFragment")
+    require("chip_fav_all", "All (1)")
+    passed("SQLite bookmarks open correctly; cancel/remove and persistence after restart")
+    tap("historyFragment")
+    require("tv_history_count", "Đã đọc: 2 bài")
+    tap("btn_clear_history")
+    tap("android:id/button1")
+    require("status_title", "Hành trình khám phá")
+    tap("libraryFragment")
+    require("chip_fav_all", "All (1)")
+    passed("Clearing SQLite history preserves bookmarks")
+
     tap("searchFragment")
     tap("query_input")
     shell("input", "text", "Ha%sNoi")
@@ -202,8 +258,29 @@ try:
     require("query_input", "Ha Noi")
     rotate(0)
     require("query_input", "Ha Noi")
-    tap("card_featured")
-    title = require("article_title").get("text")
+    # Real Volley/API path: opening a search hit still leads to the prototype reader.
+    for _ in range(12):
+        root = tree("search-live")
+        result_node = find(root, "result_title")
+        if result_node is not None:
+            break
+        time.sleep(1)
+    else:
+        raise AssertionError("Live Wikipedia search did not return results")
+    title = result_node.get("text")
+    require("btn_load_more")
+    tap("btn_load_more")
+    for _ in range(12):
+        if require("btn_load_more").get("enabled") == "true":
+            break
+        time.sleep(1)
+    else:
+        raise AssertionError("Live pagination did not finish")
+    assert find(tree("search-page-two"), "btn_load_more").get("text") != "Thử lại"
+    shot("search-results")
+    passed("Live Wikipedia search and explicit load-more complete successfully")
+    tap("result_title", text=title)
+    require("article_title", title)
     shell("input", "keyevent", "4")
     require("query_input", "Ha Noi")
     passed("Search query survives rotation and article Back")
@@ -212,12 +289,18 @@ try:
     require("query_input", "Ha Noi")
     passed("All four tabs open and preserve search state")
 
-    tap("card_featured")
+    tap("result_title", text=title)
     require("article_title", title)
     shell("input", "keyevent", "3")
-    time.sleep(1)
-    shell("am", "kill", package)
-    assert not adb("shell", "pidof", package, check=False).stdout.strip(), "Background process did not stop"
+    # ActivityManager may protect a recently foreground process briefly; kill is asynchronous too.
+    for _ in range(15):
+        time.sleep(1)
+        shell("am", "kill", package)
+        time.sleep(.5)
+        if not adb("shell", "pidof", package, check=False).stdout.strip():
+            break
+    else:
+        raise AssertionError("Background process did not stop")
     launch()
     require("article_title", title)
     shell("input", "keyevent", "4")
@@ -235,18 +318,26 @@ except Exception as error:
 finally:
     try:
         stop()
+        shell("run-as", package, "mkdir", "-p", "shared_prefs", "databases")
         for name, content in backup.items():
             if content is None:
-                shell("run-as", package, "rm", "-f", "shared_prefs/" + name)
+                shell("run-as", package, "rm", "-f", name)
             else:
-                adb("shell", "run-as", package, "tee", "shared_prefs/" + name, data=content)
+                adb("shell", "run-as", package, "tee", name, data=content)
         for key, value in rotation.items():
             if value == "null":
                 shell("settings", "delete", "system", key)
             else:
                 shell("settings", "put", "system", key, value)
+        for name, content in backup.items():
+            result = adb("exec-out", "run-as", package, "cat", name, check=False)
+            if content is None:
+                assert result.returncode != 0, "Unexpected restored file: " + name
+            else:
+                assert result.returncode == 0 and result.stdout == content, "Restore mismatch: " + name
         launch()
         report["historyAndRotationRestored"] = True
+        report["sqliteAndPreferencesRestored"] = True
     except Exception as error:
         report["restoreError"] = str(error)
         failure = failure or str(error)
