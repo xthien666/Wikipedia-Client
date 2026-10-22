@@ -3,6 +3,7 @@ package com.example.wikipediaclient.data.local;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.wikipediaclient.data.model.HistoryEntry;
@@ -26,6 +27,10 @@ public final class LocalHistoryRepository implements HistoryRepository {
     private final SqliteHistoryStore store;
     private final MutableLiveData<HistoryState> state = new MutableLiveData<>(HistoryState.loading());
     private List<HistoryEntry> lastKnownEntries = Collections.emptyList();
+    // Accessed only on the serial disk executor. A new explicit write supersedes a failed one.
+    private Write pendingWrite;
+
+    private interface Write { void run() throws Exception; }
 
     public LocalHistoryRepository(Context context, Executor diskExecutor) {
         this(context, diskExecutor, new WikiDatabaseHelper(context));
@@ -42,14 +47,25 @@ public final class LocalHistoryRepository implements HistoryRepository {
     @Override public LiveData<HistoryState> observe() { return state; }
 
     @Override public void refresh() {
+        diskExecutor.execute(this::load);
+    }
+
+    @Override public void retry() {
         diskExecutor.execute(() -> {
-            try {
-                migrateLegacy();
-                publish();
-            } catch (Exception error) {
-                state.postValue(HistoryState.error(lastKnownEntries, HistoryState.Failure.LOAD));
-            }
+            if (pendingWrite == null) load();
+            else write(pendingWrite);
         });
+    }
+
+    private void load() {
+        try {
+            migrateLegacy();
+            publish();
+        } catch (Exception error) {
+            Log.e("HistoryRepository", "History reload failed", error);
+            state.postValue(HistoryState.error(lastKnownEntries, pendingWrite == null
+                    ? HistoryState.Failure.LOAD : HistoryState.Failure.WRITE));
+        }
     }
 
     @Override public void record(HistoryEntry entry) {
@@ -62,30 +78,33 @@ public final class LocalHistoryRepository implements HistoryRepository {
     }
 
     @Override public void clear() {
-        diskExecutor.execute(() -> {
-            try {
-                // A confirmed reset may discard malformed legacy JSON without attempting to import it.
-                if (!legacy.edit().remove("entries").commit()) {
-                    throw new IllegalStateException("Could not reset legacy history");
-                }
-                store.clearHistory();
-                publish();
-            } catch (Exception error) {
-                state.postValue(HistoryState.error(lastKnownEntries, HistoryState.Failure.WRITE));
+        diskExecutor.execute(() -> write(() -> {
+            // A confirmed reset may discard malformed legacy JSON without attempting to import it.
+            if (!legacy.edit().remove("entries").commit()) {
+                throw new IllegalStateException("Could not reset legacy history");
             }
-        });
+            store.clearHistory();
+        }));
     }
 
     private void change(Runnable action) {
-        diskExecutor.execute(() -> {
-            try {
-                migrateLegacy();
-                action.run();
-                publish();
-            } catch (Exception error) {
-                state.postValue(HistoryState.error(lastKnownEntries, HistoryState.Failure.WRITE));
-            }
-        });
+        diskExecutor.execute(() -> write(() -> {
+            migrateLegacy();
+            action.run();
+        }));
+    }
+
+    private void write(Write action) {
+        pendingWrite = action;
+        try {
+            action.run();
+            pendingWrite = null;
+            publish();
+        } catch (Exception error) {
+            pendingWrite = action;
+            Log.e("HistoryRepository", "History write failed", error);
+            state.postValue(HistoryState.error(lastKnownEntries, HistoryState.Failure.WRITE));
+        }
     }
 
     private void publish() {
@@ -96,7 +115,8 @@ public final class LocalHistoryRepository implements HistoryRepository {
                     article.getCanonicalUrl(), row.getTimestamp()));
         }
         lastKnownEntries = entries;
-        state.postValue(HistoryState.ready(entries));
+        state.postValue(pendingWrite == null ? HistoryState.ready(entries)
+                : HistoryState.error(entries, HistoryState.Failure.WRITE));
     }
 
     /** Validate all old records before importing. A retry is idempotent if the process stops midway. */

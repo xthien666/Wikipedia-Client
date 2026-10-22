@@ -58,7 +58,7 @@ public final class HistoryFragment extends Fragment {
             boolean writeFailed = state.getFailure() == HistoryState.Failure.WRITE;
             binding.status.showError(writeFailed ? R.string.history_write_error_title : R.string.history_error_title,
                     getString(writeFailed ? R.string.history_write_error_message : R.string.history_error_message),
-                    model::refresh);
+                    model::retry);
         } else if (count == 0) {
             binding.status.showEmpty(R.drawable.ic_history,
                     R.string.history_empty_title, R.string.history_empty_message);

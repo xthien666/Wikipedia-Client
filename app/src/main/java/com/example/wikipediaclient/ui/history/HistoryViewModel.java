@@ -15,6 +15,7 @@ public final class HistoryViewModel extends ViewModel {
 
     public LiveData<HistoryState> observe() { return repository.observe(); }
     public void refresh() { repository.refresh(); }
+    public void retry() { repository.retry(); }
     public void remove(HistoryEntry entry) { repository.remove(entry.getLanguage(), entry.getPageId()); }
     public void clear() { repository.clear(); }
 

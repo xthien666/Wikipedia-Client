@@ -239,6 +239,8 @@ public class MainActivityTest {
                 new com.example.wikipediaclient.data.model.ArticleLocator("vi", "Bài B", 42L);
         com.example.wikipediaclient.ui.navigation.ArticleNavigator.open(article, locator);
         com.example.wikipediaclient.ui.navigation.ArticleNavigator.open(article, locator);
+        com.example.wikipediaclient.ui.navigation.ArticleNavigator.open(article,
+                new com.example.wikipediaclient.data.model.ArticleLocator("vi", "Tên khác của B", 42L));
         idle();
         controller.recreate();
         idle();
@@ -251,6 +253,26 @@ public class MainActivityTest {
         activity.getOnBackPressedDispatcher().onBackPressed();
         idle();
         assertEquals(R.id.searchFragment, navigation(activity).getCurrentDestination().getId());
+    }
+
+    @Test public void articlesWithSameTitleButDifferentResolvedIdsKeepSeparateBackEntries() {
+        MainActivity activity = launch();
+        activity.findViewById(R.id.open_sample).performClick();
+        idle();
+        NavHostFragment host = (NavHostFragment) activity.getSupportFragmentManager()
+                .findFragmentById(R.id.nav_host_fragment);
+        androidx.fragment.app.Fragment source = host.getChildFragmentManager().getPrimaryNavigationFragment();
+        com.example.wikipediaclient.ui.navigation.ArticleNavigator.open(source,
+                new com.example.wikipediaclient.data.model.ArticleLocator("vi", "Same title", 41L));
+        idle();
+        source = host.getChildFragmentManager().getPrimaryNavigationFragment();
+        com.example.wikipediaclient.ui.navigation.ArticleNavigator.open(source,
+                new com.example.wikipediaclient.data.model.ArticleLocator("vi", "Same title", 42L));
+        idle();
+        assertEquals(42L, navigation(activity).getCurrentBackStackEntry().getArguments().getLong("pageId"));
+        activity.getOnBackPressedDispatcher().onBackPressed();
+        idle();
+        assertEquals(41L, navigation(activity).getCurrentBackStackEntry().getArguments().getLong("pageId"));
     }
 
     @Test public void corruptedHistoryOffersRetryAndConfirmedReset() throws Exception {

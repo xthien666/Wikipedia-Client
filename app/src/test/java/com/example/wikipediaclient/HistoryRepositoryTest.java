@@ -23,6 +23,14 @@ import org.robolectric.annotation.Config;
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28, application = android.app.Application.class)
 public class HistoryRepositoryTest {
+    private static class ControlledDatabase extends com.example.wikipediaclient.data.local.WikiDatabaseHelper {
+        volatile boolean failWrites;
+        ControlledDatabase(Context context) { super(context); }
+        @Override public android.database.sqlite.SQLiteDatabase getWritableDatabase() {
+            if (failWrites) throw new android.database.sqlite.SQLiteException("Simulated disk failure");
+            return super.getWritableDatabase();
+        }
+    }
     private ExecutorService disk;
     @Before public void setup() {
         disk = Executors.newSingleThreadExecutor();
@@ -85,5 +93,74 @@ public class HistoryRepositoryTest {
         assertTrue(state(reopened.observe()).getEntries().isEmpty());
         assertEquals("saved", context.getSharedPreferences("other_data", Context.MODE_PRIVATE)
                 .getString("bookmark", null));
+    }
+
+    @Test public void retryRepeatsFailedRemovalAndRefreshDoesNotHideIt() {
+        Context context = RuntimeEnvironment.getApplication();
+        ControlledDatabase database = new ControlledDatabase(context);
+        LocalHistoryRepository repository = new LocalHistoryRepository(context, disk, database);
+        repository.record(new HistoryEntry("vi", 1, "A", "https://vi.wikipedia.org/wiki/A", 100));
+        assertEquals(1, state(repository.observe()).getEntries().size());
+        database.failWrites = true;
+        repository.remove("vi", 1);
+        assertEquals(HistoryState.Failure.WRITE, state(repository.observe()).getFailure());
+        assertEquals(1, state(repository.observe()).getEntries().size());
+        database.failWrites = false;
+        repository.refresh();
+        assertEquals(HistoryState.Failure.WRITE, state(repository.observe()).getFailure());
+        assertEquals(1, state(repository.observe()).getEntries().size());
+        repository.retry();
+        assertEquals(HistoryState.Kind.READY, state(repository.observe()).getKind());
+        assertTrue(state(repository.observe()).getEntries().isEmpty());
+        drain();
+        disk.execute(database::close);
+    }
+
+    @Test public void retryRepeatsConfirmedClearWithoutRemovingBookmarks() throws Exception {
+        Context context = RuntimeEnvironment.getApplication();
+        ControlledDatabase database = new ControlledDatabase(context);
+        LocalHistoryRepository repository = new LocalHistoryRepository(context, disk, database);
+        repository.record(new HistoryEntry("vi", 1, "A", "https://vi.wikipedia.org/wiki/A", 100));
+        state(repository.observe());
+        disk.submit(() -> new com.example.wikipediaclient.data.repository.LocalBookmarkRepository(database)
+                .saveBookmark(new com.example.wikipediaclient.data.model.PersonalArticle(
+                        "vi", 1, "A", "https://vi.wikipedia.org/wiki/A"), 100)).get();
+        database.failWrites = true;
+        repository.clear();
+        assertEquals(HistoryState.Failure.WRITE, state(repository.observe()).getFailure());
+        database.failWrites = false;
+        repository.retry();
+        assertEquals(HistoryState.Kind.READY, state(repository.observe()).getKind());
+        assertTrue(state(repository.observe()).getEntries().isEmpty());
+        assertTrue(disk.submit(() -> new com.example.wikipediaclient.data.repository.LocalBookmarkRepository(database)
+                .isBookmarked("vi", 1)).get());
+        disk.execute(database::close);
+    }
+
+    @Test public void explicitClearSupersedesFailedRecordSoRetryCannotRecreateIt() {
+        Context context = RuntimeEnvironment.getApplication();
+        ControlledDatabase database = new ControlledDatabase(context);
+        LocalHistoryRepository repository = new LocalHistoryRepository(context, disk, database);
+        state(repository.observe());
+        database.failWrites = true;
+        repository.record(new HistoryEntry("vi", 1, "A", "https://vi.wikipedia.org/wiki/A", 100));
+        assertEquals(HistoryState.Failure.WRITE, state(repository.observe()).getFailure());
+        database.failWrites = false;
+        repository.clear();
+        assertEquals(HistoryState.Kind.READY, state(repository.observe()).getKind());
+        repository.retry();
+        assertTrue(state(repository.observe()).getEntries().isEmpty());
+        disk.execute(database::close);
+    }
+
+    @Test public void retryOfLoadFailureReloadsRepairedData() {
+        Context context = RuntimeEnvironment.getApplication();
+        android.content.SharedPreferences preferences = context.getSharedPreferences("reading_history", Context.MODE_PRIVATE);
+        preferences.edit().putString("entries", "broken-json").commit();
+        LocalHistoryRepository repository = new LocalHistoryRepository(context, disk);
+        assertEquals(HistoryState.Failure.LOAD, state(repository.observe()).getFailure());
+        preferences.edit().remove("entries").commit();
+        repository.retry();
+        assertEquals(HistoryState.Kind.READY, state(repository.observe()).getKind());
     }
 }

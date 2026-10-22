@@ -6,7 +6,7 @@
 
 | Chức năng | Hiện trạng |
 |---|---|
-| Điều hướng | Bốn tab Khám phá, Yêu thích, Lịch sử, Cài đặt; mở màn hình bài mẫu và quay lại |
+| Điều hướng | Bốn tab Khám phá, Yêu thích, Lịch sử, Cài đặt; Back giữa các bài; bỏ mở lặp cùng `pageId` dù tiêu đề khác |
 | Ô tìm kiếm | API Wikipedia tiếng Việt, snippet dạng chữ, debounce và phím tìm kiếm, tải thêm có chống trùng; hủy/bỏ qua response cũ và giữ query qua lifecycle |
 | Đọc bài | Hiển thị tên bài được chọn và lời hướng dẫn cục bộ; chưa tải nội dung Wikipedia |
 | Liên kết bài | Mở trang tương ứng bằng trình duyệt; chia sẻ liên kết bằng Android Intent |
@@ -91,6 +91,18 @@ Các đầu ra sau khi chạy:
 
 APK và báo cáo được tạo ở máy build, không được lưu trong Git.
 
+### Đóng gói bản debug theo commit
+
+Sau khi commit phần mã nguồn dùng chung, chạy:
+
+```powershell
+.\tools\package-debug.ps1
+# Kèm kết quả thiết bị đã chạy trên đúng APK:
+.\tools\package-debug.ps1 -DeviceReport build/tv1-device/report.json
+```
+
+Script yêu cầu working tree sạch đối với các file Git theo dõi và file mới chưa bị ignore; chạy build/lint/test rồi tạo `build/handoff-<commit>-<thời gian>.zip`. Gói gồm APK, `source.zip` lấy từ đúng commit, README, báo cáo, manifest và `SHA256SUMS.txt`. Kết quả thiết bị chỉ được nhận khi PASS, đã khôi phục dữ liệu và SHA-256 khớp APK. Gói không phụ thuộc tài liệu kế hoạch, SDK/JDK hoặc cấu hình cá nhân trên máy. Đây là bản debug phục vụ tích hợp; manifest ghi rõ reader đầy đủ còn đang chờ.
+
 ### Cài APK bằng ADB
 
 Thêm thư mục `platform-tools` của SDK vào PATH hoặc chạy ADB trực tiếp từ thư mục đó. Kết nối thiết bị và chấp nhận yêu cầu USB debugging trên điện thoại.
@@ -119,7 +131,7 @@ Thay `emulator-5554` bằng serial thực tế. Script cần Python 3, APK debug
 
 ## Kiểm thử và CI
 
-Ngày 22/10/2026, bản tích hợp TV1/TV2/TV4 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **41/41 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle và tính bền vững của SQLite. Bản sao mã nguồn sạch từng build được trên cùng máy trước lần tích hợp này; chưa xác nhận build trên máy khác.
+Ngày 22/10/2026, bản tích hợp TV1/TV2/TV4 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **46/46 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle, tính bền vững của SQLite, thử lại thao tác ghi/xóa lỗi và nhận diện bài trong back stack theo pageId. GitHub Actions đã build/test bản tích hợp trước đó thành công trên Ubuntu; chưa xác nhận cài/chạy trên điện thoại thật hoặc máy của thành viên khác.
 
 Bộ [MainActivityTest](app/src/test/java/com/example/wikipediaclient/MainActivityTest.java) kiểm tra điều hướng/Back, giữ query và saved state, tính nhất quán của bài mẫu, Intent chia sẻ, thư viện rỗng, UI lịch sử, lưu cỡ chữ, icon thanh hệ thống và khoảng đệm bàn phím. [HistoryRepositoryTest](app/src/test/java/com/example/wikipediaclient/HistoryRepositoryTest.java) kiểm tra chống trùng, thứ tự và dữ liệu bền vững. [PersonalStorageTest](app/src/test/java/com/example/wikipediaclient/PersonalStorageTest.java) kiểm tra chuyển dữ liệu cũ, bảo vệ metadata mới, giữ bookmark khi xóa history và chặn truy cập DB trên main thread. Các test UI dùng repository tìm kiếm giả; test ADB mới đi qua Volley/API thật.
 
@@ -127,7 +139,7 @@ Robolectric chạy API 28. Kiểm thử ADB dùng emulator `medium_phone`, Andro
 
 Ngày 22/10/2026, **11/11 nhóm kiểm tra ADB đạt** trên APK tích hợp: lịch sử đúng thứ tự/mở bài/Back; xóa bền vững; xác nhận xóa qua xoay máy; phục hồi JSON cũ bị lỗi; bookmark mở/xóa/hủy và giữ sau khởi động lại; xóa history giữ bookmark; tìm kiếm Wikipedia thật và tải thêm; giữ query qua xoay/Back/đổi tab; khôi phục đúng màn hình sau khi process thật sự dừng; không phát sinh crash. Script xác minh SHA-256 APK và khôi phục chính xác database/preferences trước khi mở lại app.
 
-[Workflow Android build](.github/workflows/android.yml) chạy khi push lên `main` hoặc mở pull request, sử dụng JDK 17 và ba task `assembleDebug`, `lintDebug`, `testDebugUnitTest`. Xem kết quả từng lần chạy tại [GitHub Actions](https://github.com/xthien666/Wikipedia-Client/actions).
+[Workflow Android build](.github/workflows/android.yml) chạy khi push lên `main`, mở pull request hoặc chọn Run workflow; dùng JDK 17 và ba task `assembleDebug`, `lintDebug`, `testDebugUnitTest`. Mỗi lần chạy tải lên báo cáo test/lint, kể cả khi một bước thất bại. Lần chạy thành công còn có artifact `wikiread-debug-<số lần chạy>` chứa APK. Mở [GitHub Actions](https://github.com/xthien666/Wikipedia-Client/actions), chọn lần chạy và tải tại Artifacts; file được giữ 7 ngày. APK debug giữa các máy có thể dùng khóa ký khác nhau nên không cam kết cài cập nhật đè lên bản hiện có.
 
 ## Cấu trúc mã nguồn
 
@@ -160,6 +172,8 @@ app/src/test/                     # Unit tests Robolectric
 ### Hợp đồng lịch sử để tích hợp reader
 
 `HistoryRepository` nằm trong `data/repository`, được nối với SQLite của TV4 qua lớp `data/local/LocalHistoryRepository`. Sau khi reader hiển thị **thành công nội dung thật**, TV3 gọi `getHistoryRepository().recordRead(new PersonalArticle("vi", resolvedPageId, resolvedTitle, canonicalUrl), System.currentTimeMillis())`. Lời gọi lịch sử này tự chạy trên disk executor; UI quan sát `observe()` để nhận loading/ready/error. Dùng metadata của response cuối sau redirect; không ghi khi chỉ mở màn hình mẫu, nhận summary hoặc tải bài lỗi. Các lời gọi BookmarkRepository vẫn là blocking và phải chạy trên `getDiskExecutor()`. Chi tiết hợp đồng chung: [TV4 integration](docs/tv4-integration.md).
+
+`retry()` của lịch sử thực hiện lại thao tác ghi/xóa gần nhất bị lỗi, hoặc tải lại khi chỉ lỗi đọc. `refresh()` giữ thông báo thao tác ghi/xóa thất bại cho đến khi người dùng thử lại hoặc yêu cầu một thao tác ghi khác. Retry được giữ trong phiên tiến trình hiện tại; không lưu thao tác chưa thành công qua process death. Xóa toàn bộ vẫn cần xác nhận trước lần yêu cầu đầu tiên.
 
 ## Phân công và tích hợp
 

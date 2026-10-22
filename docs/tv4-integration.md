@@ -38,6 +38,7 @@ The history UI already uses `container.getHistoryRepository()`:
 
 - `observe()` — LiveData of immutable HistoryState snapshots, newest first.
 - `refresh()` — reload on entering the history screen.
+- `retry()` — repeat the last failed write/removal, or retry a failed read. A refresh does not silently dismiss a pending write failure. A newer explicit write supersedes the failed action; retry state is in memory for the current process.
 - `remove("vi", pageId)` — asynchronously delete one entry.
 - `clear()` — asynchronously delete all history after confirmation.
 

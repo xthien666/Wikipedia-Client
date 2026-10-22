@@ -15,9 +15,8 @@ public final class ArticleNavigator {
         if (controller.getCurrentDestination() != null
                 && controller.getCurrentDestination().getId() == R.id.articleFragment
                 && current != null
-                && Objects.equals(current.getString("title"), locator.getTitle())
                 && Objects.equals(current.getString("language"), locator.getLanguage())
-                && current.getLong("pageId", 0L) == (locator.getPageId() == null ? 0L : locator.getPageId())) {
+                && sameArticle(current, locator)) {
             return; // Ignore repeated taps that would push the same article twice.
         }
         Bundle args = new Bundle();
@@ -25,5 +24,13 @@ public final class ArticleNavigator {
         args.putString("language", locator.getLanguage());
         if (locator.getPageId() != null) args.putLong("pageId", locator.getPageId());
         controller.navigate(R.id.action_open_article, args);
+    }
+
+    private static boolean sameArticle(Bundle current, ArticleLocator locator) {
+        long currentId = current.getLong("pageId", 0L);
+        Long requestedId = locator.getPageId();
+        if (currentId > 0 && requestedId != null) return currentId == requestedId;
+        return currentId == 0 && requestedId == null
+                && Objects.equals(current.getString("title"), locator.getTitle());
     }
 }
