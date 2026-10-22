@@ -89,6 +89,12 @@ public final class ReaderInstrumentation extends Instrumentation {
         JSONObject report = new JSONObject(); Throwable failure = null;
         try {
             output = new File(getTargetContext().getFilesDir(), "tv3-qa"); output.mkdirs();
+            File[] previous = output.listFiles();
+            if (previous != null) for (File file : previous) {
+                if (file.isFile() && (file.getName().endsWith(".png") || file.getName().equals("report.json"))) {
+                    if (!file.delete()) throw new IOException("Cannot clear previous QA evidence: " + file.getName());
+                }
+            }
             ((Application)getTargetContext().getApplicationContext()).registerActivityLifecycleCallbacks(lifecycle);
             MainActivity launched = (MainActivity)startActivitySync(new Intent(getTargetContext(), MainActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
@@ -105,8 +111,18 @@ public final class ReaderInstrumentation extends Instrumentation {
             check(((WikiApplication)activity().getApplication()).getContainer().getHistoryRepository()
                     .observe().getValue().getEntries().stream().anyMatch(e -> e.getPageId() == 80), "History records committed canonical page 80");
             stage = "anchor";
-            route("https://vi.wikipedia.org/wiki/H%C3%A0_N%E1%BB%99i#cite_note-hanoimoi.com.vn-1");
-            Thread.sleep(1000);
+            com.example.wikipediaclient.data.model.ArticleContent articleContent = ui(() -> {
+                androidx.fragment.app.Fragment reader = ((NavHostFragment) activity().getSupportFragmentManager()
+                        .findFragmentById(R.id.nav_host_fragment)).getChildFragmentManager().getPrimaryNavigationFragment();
+                return new androidx.lifecycle.ViewModelProvider(reader).get(ArticleViewModel.class).state().getValue().content;
+            });
+            java.util.regex.Matcher citation = java.util.regex.Pattern.compile("id=\"(cite_note[^\"]+)\"").matcher(articleContent.html);
+            if (!citation.find()) throw new AssertionError("Live HTML has no citation target");
+            report.put("citationAnchor", citation.group(1));
+            report.put("oldFixedCitationPresent", articleContent.html.contains("id=\"cite_note-hanoimoi.com.vn-1\""));
+            route(articleContent.article.getCanonicalUrl() + "#" + android.net.Uri.encode(citation.group(1)));
+            long anchorDeadline = System.currentTimeMillis() + 10000;
+            while (ui(() -> web().getScrollY() == 0) && System.currentTimeMillis() < anchorDeadline) Thread.sleep(100);
             check(title().equals("Hà Nội") && ui(() -> web().getScrollY() > 0), "T06 real citation anchor scrolls within native article entry");
             // Scroll a long article, saving a proportional reading position before navigation.
             runOnMainSync(() -> web().scrollTo(0, 18000));
