@@ -131,7 +131,7 @@ Thay `emulator-5554` bằng serial thực tế. Script cần Python 3, APK debug
 
 ## Kiểm thử và CI
 
-Ngày 22/10/2026, bản tích hợp TV1/TV2/TV3/TV4 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **67/67 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle, tính bền vững của SQLite, thử lại thao tác ghi/xóa lỗi và nhận diện bài trong back stack theo pageId. GitHub Actions đã build/test bản tích hợp trước đó thành công trên Ubuntu; chưa xác nhận cài/chạy trên điện thoại thật hoặc máy của thành viên khác.
+Ngày 22/10/2026, bản tích hợp TV1/TV2/TV3/TV4 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **67/67 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle, tính bền vững của SQLite, thử lại thao tác ghi/xóa lỗi và nhận diện bài trong back stack theo pageId. GitHub Actions [run 6](https://github.com/xthien666/Wikipedia-Client/actions/runs/39803121581) đã build/test bản tích hợp TV1/TV3 trên Ubuntu; chưa xác nhận cài/chạy trên điện thoại thật hoặc máy của thành viên khác.
 
 Hai test host `python -m unittest discover -s tools -p test_device_backup.py` kiểm tra script không xóa/ghi đè dữ liệu khi sao lưu thất bại giữa chừng; workflow CI cũng chạy hai ca này.
 
@@ -187,9 +187,9 @@ app/src/test/                     # Unit tests Robolectric
 | TV4 | Database, repository yêu thích/lịch sử và UI yêu thích |
 | TV5 | Settings, nguồn/chia sẻ và kiểm thử tích hợp |
 
-Tìm kiếm, reader và lưu dữ liệu cá nhân đã tích hợp. Reader dùng metadata của bài đã resolve cho nội dung, yêu thích, lịch sử, nguồn và chia sẻ. Không truyền HTML dài qua navigation; không giữ Activity hoặc View trong ViewModel. HTTP/database cần nằm trong lớp dữ liệu, công việc blocking chạy ngoài main thread.
+Từ ngày 22/10/2026, cùng một người phụ trách cả TV1 và TV3; ký hiệu vai trò được giữ để đối chiếu kế hoạch và kiểm thử. Tìm kiếm, reader và lưu dữ liệu cá nhân đã tích hợp. Reader dùng metadata của bài đã resolve cho nội dung, yêu thích, lịch sử, nguồn và chia sẻ. Không truyền HTML dài qua navigation; không giữ Activity hoặc View trong ViewModel. HTTP/database cần nằm trong lớp dữ liệu, công việc blocking chạy ngoài main thread.
 
-Tạo nhánh ngắn theo phần việc, chẳng hạn `feature/search` hoặc `feature/article`. Trước pull request, chạy ba task build/lint/test ở trên và ghi rõ kiểm tra thiết bị đã thực hiện. Thống nhất thay đổi Gradle, manifest, navigation và dependency dùng chung với TV1; thay đổi schema dữ liệu với TV4.
+Phần TV1/TV3 hiện được tích hợp trực tiếp trên `main`; trước khi push, chạy ba task build/lint/test ở trên và ghi rõ kiểm tra thiết bị đã thực hiện. Các phần khác có thể dùng nhánh ngắn và pull request theo quy trình nhóm. Thống nhất thay đổi Gradle, manifest, navigation và dependency dùng chung với TV1; thay đổi schema dữ liệu với TV4.
 
 Không commit SDK/JDK cục bộ, `local.properties`, output build, khóa ký, token hoặc khóa API. README này là tài liệu chung trên GitHub; kế hoạch, ghi chép và ảnh kiểm thử cá nhân chưa được đưa vào repository.
 
