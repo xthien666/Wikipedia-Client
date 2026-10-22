@@ -12,3 +12,12 @@ captures/
 mcp_config.json
 .agents/mcp_config.json
 .vscode/mcp.json
+
+# Local workstation files
+.DS_Store
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.env.*
