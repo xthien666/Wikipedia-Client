@@ -57,7 +57,7 @@ try {
         unitTestsPassed = $testCount
         deviceChecksPassed = $deviceChecks
         checks = @('assembleDebug', 'lintDebug', 'testDebugUnitTest')
-        scope = 'Integrated prototype: real search and SQLite storage; full article reader is pending.'
+        scope = 'Integrated prototype: real search, full HTML/WebView reader, canonical bookmarks/history and persistent reader font settings.'
     } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $packageDir 'manifest.json') -Encoding utf8
 
     $hashes = foreach ($file in Get-ChildItem -LiteralPath $packageDir -File -Recurse | Sort-Object FullName) {

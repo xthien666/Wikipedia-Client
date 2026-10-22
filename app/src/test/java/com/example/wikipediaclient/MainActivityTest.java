@@ -25,7 +25,7 @@ public class MainActivityTest {
     public static class TestApplication extends WikiApplication {
         @Override protected com.example.wikipediaclient.data.AppContainer createContainer() {
             return new com.example.wikipediaclient.data.AppContainer(this,
-                    (query, offset, callback) -> () -> {});
+                    (query, offset, callback) -> () -> {}, new com.example.wikipediaclient.ui.article.FixtureArticles());
         }
     }
     private ActivityController<MainActivity> controller;
@@ -115,26 +115,71 @@ public class MainActivityTest {
         assertTrue("Light app requires dark navigation bar icons", bars.isAppearanceLightNavigationBars());
     }
 
-    @Test public void readerPreviewNeverSubstitutesFactsFromAnotherArticle() {
+    @Test public void readerSharesOnlyCommittedCanonicalContentAndDisablesActiveContent() {
         MainActivity activity = launch();
         activity.findViewById(R.id.open_sample).performClick();
         idle();
         String title = ((TextView) activity.findViewById(R.id.article_title)).getText().toString();
-        String body = ((TextView) activity.findViewById(R.id.article_body)).getText().toString();
-        assertTrue(body.contains(title));
-        assertFalse(body.contains("Vịnh Hạ Long"));
-        assertFalse(activity.findViewById(R.id.action_save).isEnabled());
-        assertFalse(activity.findViewById(R.id.action_listen).isEnabled());
+        android.webkit.WebView web = activity.findViewById(R.id.article_body);
+        org.robolectric.shadows.ShadowWebView shadow = Shadows.shadowOf(web);
+        assertTrue(shadow.getLastLoadDataWithBaseURL().data.contains(title));
+        assertFalse(web.getSettings().getJavaScriptEnabled());
+        assertFalse(web.getSettings().getAllowFileAccess());
+        assertFalse(web.getSettings().getAllowContentAccess());
+        assertFalse(activity.findViewById(R.id.action_share).isEnabled());
+        shadow.getWebViewClient().onPageCommitVisible(web, shadow.getLastLoadDataWithBaseURL().baseUrl);
         activity.findViewById(R.id.action_share).performClick();
         android.content.Intent chooser = Shadows.shadowOf(activity).getNextStartedActivity();
         assertEquals(android.content.Intent.ACTION_CHOOSER, chooser.getAction());
         android.content.Intent share = chooser.getParcelableExtra(android.content.Intent.EXTRA_INTENT);
         assertNotNull(share);
-        assertEquals(android.content.Intent.ACTION_SEND, share.getAction());
-        assertEquals("https://vi.wikipedia.org/wiki/" + android.net.Uri.encode(title),
+        assertEquals(com.example.wikipediaclient.ui.article.FixtureArticles.article(title).article.getCanonicalUrl(),
                 share.getStringExtra(android.content.Intent.EXTRA_TEXT));
     }
+    @Test public void articleBReplacesHtmlShareAndHistoryTogetherAndBackRestoresA() throws Exception {
+        MainActivity activity = launch();
+        activity.findViewById(R.id.open_sample).performClick(); idle();
+        String titleA = ((TextView) activity.findViewById(R.id.article_title)).getText().toString();
+        android.webkit.WebView web = activity.findViewById(R.id.article_body);
+        org.robolectric.shadows.ShadowWebView shadow = Shadows.shadowOf(web);
+        shadow.getWebViewClient().onPageCommitVisible(web, shadow.getLastLoadDataWithBaseURL().baseUrl);
+        shadow.getWebViewClient().shouldOverrideUrlLoading(web, "https://vi.wikipedia.org/wiki/Vi%E1%BB%87t_Nam"); idle();
+        assertEquals("Việt Nam", ((TextView) activity.findViewById(R.id.article_title)).getText().toString());
+        assertFalse(activity.findViewById(R.id.action_share).isEnabled());
+        web = activity.findViewById(R.id.article_body); shadow = Shadows.shadowOf(web);
+        assertTrue(shadow.getLastLoadDataWithBaseURL().data.contains("Việt Nam"));
+        shadow.getWebViewClient().onPageCommitVisible(web, shadow.getLastLoadDataWithBaseURL().baseUrl);
+        activity.findViewById(R.id.action_share).performClick();
+        android.content.Intent share = Shadows.shadowOf(activity).getNextStartedActivity()
+                .getParcelableExtra(android.content.Intent.EXTRA_INTENT);
+        assertEquals(com.example.wikipediaclient.ui.article.FixtureArticles.article("Việt Nam").article.getCanonicalUrl(),
+                share.getStringExtra(android.content.Intent.EXTRA_TEXT));
+        drainDisk(activity);
+        assertEquals("Việt Nam", ((WikiApplication) activity.getApplication()).getContainer()
+                .getHistoryRepository().observe().getValue().getEntries().get(0).getTitle());
+        activity.getOnBackPressedDispatcher().onBackPressed(); idle();
+        assertEquals(titleA, ((TextView) activity.findViewById(R.id.article_title)).getText().toString());
+        web = activity.findViewById(R.id.article_body); shadow = Shadows.shadowOf(web);
+        assertTrue(shadow.getLastLoadDataWithBaseURL().data.contains(titleA));
+    }
 
+    @Test public void mainFrameErrorCannotBeRecordedAsSuccessfulArticleByLatePageFinished() {
+        MainActivity activity = launch(); activity.findViewById(R.id.open_sample).performClick(); idle();
+        android.webkit.WebView web = activity.findViewById(R.id.article_body);
+        org.robolectric.shadows.ShadowWebView shadow = Shadows.shadowOf(web);
+        android.webkit.WebResourceRequest request = new android.webkit.WebResourceRequest() {
+            public android.net.Uri getUrl() { return android.net.Uri.parse("https://vi.wikipedia.org/wiki/A"); }
+            public boolean isForMainFrame() { return true; }
+            public boolean isRedirect() { return false; }
+            public boolean hasGesture() { return false; }
+            public String getMethod() { return "GET"; }
+            public java.util.Map<String, String> getRequestHeaders() { return java.util.Collections.emptyMap(); }
+        };
+        shadow.getWebViewClient().onReceivedError(web, request, null);
+        shadow.getWebViewClient().onPageFinished(web, shadow.getLastLoadDataWithBaseURL().baseUrl);
+        assertFalse(activity.findViewById(R.id.action_share).isEnabled());
+        assertEquals(View.VISIBLE, activity.findViewById(R.id.status).getVisibility());
+    }
     @Test public void submittedSearchKeepsQueryHidesSuggestionsAndOpensNoArticle() {
         MainActivity activity = launch();
         EditText input = activity.findViewById(R.id.query_input);
@@ -316,8 +361,7 @@ public class MainActivityTest {
         idle();
         activity.findViewById(R.id.open_sample).performClick();
         idle();
-        assertEquals(22 * activity.getResources().getDisplayMetrics().scaledDensity,
-                ((TextView) activity.findViewById(R.id.article_body)).getTextSize(), 0.01f);
+        assertEquals(22, ((android.webkit.WebView) activity.findViewById(R.id.article_body)).getSettings().getDefaultFontSize());
     }
 
     @Test public void resizedWindowDoesNotApplyKeyboardPaddingTwice() {

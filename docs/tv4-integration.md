@@ -1,6 +1,6 @@
 # TV4 integration
 
-Bookmark and history storage are integrated with TV1's history UI. The library uses real saved data. The reader save action and successful-read callback still need to be connected by TV3.
+Bookmark and history storage are integrated with TV1's history UI. The library uses real saved data. TV3 has connected reader save/remove actions and the successful-render history callback using resolved API metadata.
 
 ## Shared access
 

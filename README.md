@@ -1,6 +1,6 @@
 # WikiRead — Wikipedia Client
 
-Ứng dụng Android phục vụ đồ án nhóm 5 thành viên, hướng tới tìm kiếm, đọc và quản lý bài viết Wikipedia tiếng Việt. Mã nguồn hiện tại là bản **prototype 0.1.0**: đã tích hợp tìm kiếm Wikipedia thật, kho SQLite cho yêu thích/lịch sử và UI danh sách; reader đầy đủ vẫn đang chờ tích hợp.
+Ứng dụng Android phục vụ đồ án nhóm 5 thành viên, hướng tới tìm kiếm, đọc và quản lý bài viết Wikipedia tiếng Việt. Mã nguồn hiện tại là bản **prototype 0.1.0**: đã tích hợp tìm kiếm Wikipedia thật, reader toàn bài HTML/WebView, kho SQLite và UI yêu thích/lịch sử.
 
 ## Trạng thái chức năng
 
@@ -8,14 +8,14 @@
 |---|---|
 | Điều hướng | Bốn tab Khám phá, Yêu thích, Lịch sử, Cài đặt; Back giữa các bài; bỏ mở lặp cùng `pageId` dù tiêu đề khác |
 | Ô tìm kiếm | API Wikipedia tiếng Việt, snippet dạng chữ, debounce và phím tìm kiếm, tải thêm có chống trùng; hủy/bỏ qua response cũ và giữ query qua lifecycle |
-| Đọc bài | Hiển thị tên bài được chọn và lời hướng dẫn cục bộ; chưa tải nội dung Wikipedia |
-| Liên kết bài | Mở trang tương ứng bằng trình duyệt; chia sẻ liên kết bằng Android Intent |
-| Yêu thích | Kho SQLite bền vững, danh sách thật, mở/xóa có xác nhận; chờ nối nút lưu trong reader, bộ lọc thể loại chưa có metadata nên bị vô hiệu hóa |
-| Lịch sử | Danh sách động từ kho lưu cục bộ, mới nhất trước; mở lại, xóa từng bài hoặc xóa tất cả có xác nhận; reader thật chưa gọi ghi nhận bài đã đọc |
-| Cỡ chữ | Bốn mức, lưu bằng SharedPreferences và áp dụng cho preview lẫn reader mẫu |
-| Loading, rỗng, lỗi | StatusView cho tìm kiếm, yêu thích và lịch sử; tìm kiếm có retry khi lỗi và retry tải thêm mà giữ kết quả đã tải |
+| Đọc bài | HTML toàn bài qua REST; bảng cuộn ngang, ảnh và chú thích; lỗi/mất mạng/thử lại; JavaScript và truy cập file tắt |
+| Liên kết bài | Bài tiếng Việt qua reader, anchor ở lại trong bài, link ngoài/ngôn ngữ khác/trang chức năng mở trình duyệt; chia sẻ URL canonical |
+| Yêu thích | Kho SQLite bền vững, danh sách thật, mở/xóa có xác nhận; nút thêm/bỏ trong reader dùng ID đã resolve; bộ lọc thể loại chưa có metadata nên bị vô hiệu hóa |
+| Lịch sử | Danh sách động từ kho lưu cục bộ, mới nhất trước; mở lại, xóa từng bài hoặc xóa tất cả có xác nhận; chỉ ghi sau khi WebView hiển thị nội dung thành công; Back/xoay máy giữ bài và vị trí đọc |
+| Cỡ chữ | Bốn mức, lưu bằng SharedPreferences và áp dụng cho preview và HTML reader |
+| Loading, rỗng, lỗi | StatusView cho tìm kiếm, reader, yêu thích và lịch sử; tìm kiếm có retry khi lỗi và retry tải thêm mà giữ kết quả đã tải |
 
-Dữ liệu yêu thích/lịch sử được lưu trong hai bảng SQLite riêng, khóa duy nhất `language + pageId`; cỡ chữ được lưu bằng SharedPreferences. Lịch sử cũ của TV1 được chuyển sang SQLite khi đọc kho lần đầu, giữ bản cũ nếu chưa chuyển thành công. Yêu thích và lịch sử bắt đầu trống vì reader chưa lưu/đọc bài thật; màn hình bài mẫu không tự tạo bản ghi giả. Nghe tóm tắt, nút lưu bài trong reader và xóa cache đang bị vô hiệu hóa vì chưa triển khai. Bản hiện tại chưa hỗ trợ đọc ngoại tuyến.
+Dữ liệu yêu thích/lịch sử được lưu trong hai bảng SQLite riêng, khóa duy nhất `language + pageId`; cỡ chữ được lưu bằng SharedPreferences. Lịch sử cũ của TV1 được chuyển sang SQLite khi đọc kho lần đầu, giữ bản cũ nếu chưa chuyển thành công. Yêu thích/lịch sử bắt đầu trống trên cài mới, được cập nhật bằng metadata bài thật từ reader. Lưu yêu thích chỉ lưu liên kết, không tải nội dung offline. Xóa cache vẫn chưa triển khai; reader không hiển thị nút nghe tóm tắt. Bản hiện tại chưa hỗ trợ đọc ngoại tuyến.
 
 ## Công nghệ và cấu hình
 
@@ -33,7 +33,7 @@ Các phiên bản dưới đây lấy từ cấu hình build trong repository.
 | Material Components | 1.13.0 |
 | Navigation Component | 2.9.7 |
 | Lifecycle | 2.9.4 |
-| Volley | 1.2.1; Action API tìm kiếm và REST summary |
+| Volley | 1.2.1; Action API tìm kiếm, REST summary và REST `with_html` toàn bài |
 | Lưu dữ liệu cá nhân | SQLiteOpenHelper cho yêu thích/lịch sử; SharedPreferences cho cỡ chữ; truy cập DB trên Executor riêng |
 | Kiểm thử | JUnit 4.13.2, Robolectric 4.17; suite chạy API 28 |
 
@@ -101,7 +101,7 @@ Sau khi commit phần mã nguồn dùng chung, chạy:
 .\tools\package-debug.ps1 -DeviceReport build/tv1-device/report.json
 ```
 
-Script yêu cầu working tree sạch đối với các file Git theo dõi và file mới chưa bị ignore; chạy build/lint/test rồi tạo `build/handoff-<commit>-<thời gian>.zip`. Gói gồm APK, `source.zip` lấy từ đúng commit, README, báo cáo, manifest và `SHA256SUMS.txt`. Kết quả thiết bị chỉ được nhận khi PASS, đã khôi phục dữ liệu và SHA-256 khớp APK. Gói không phụ thuộc tài liệu kế hoạch, SDK/JDK hoặc cấu hình cá nhân trên máy. Đây là bản debug phục vụ tích hợp; manifest ghi rõ reader đầy đủ còn đang chờ.
+Script yêu cầu working tree sạch đối với các file Git theo dõi và file mới chưa bị ignore; chạy build/lint/test rồi tạo `build/handoff-<commit>-<thời gian>.zip`. Gói gồm APK, `source.zip` lấy từ đúng commit, README, báo cáo, manifest và `SHA256SUMS.txt`. Kết quả thiết bị chỉ được nhận khi PASS, đã khôi phục dữ liệu và SHA-256 khớp APK. Gói không phụ thuộc tài liệu kế hoạch, SDK/JDK hoặc cấu hình cá nhân trên máy. Đây là bản debug phục vụ tích hợp; manifest ghi phạm vi tìm kiếm, reader và kho dữ liệu cá nhân.
 
 ### Cài APK bằng ADB
 
@@ -131,11 +131,11 @@ Thay `emulator-5554` bằng serial thực tế. Script cần Python 3, APK debug
 
 ## Kiểm thử và CI
 
-Ngày 22/10/2026, bản tích hợp TV1/TV2/TV4 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **46/46 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle, tính bền vững của SQLite, thử lại thao tác ghi/xóa lỗi và nhận diện bài trong back stack theo pageId. GitHub Actions đã build/test bản tích hợp trước đó thành công trên Ubuntu; chưa xác nhận cài/chạy trên điện thoại thật hoặc máy của thành viên khác.
+Ngày 22/10/2026, bản tích hợp TV1/TV2/TV3/TV4 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **64/64 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle, tính bền vững của SQLite, thử lại thao tác ghi/xóa lỗi và nhận diện bài trong back stack theo pageId. GitHub Actions đã build/test bản tích hợp trước đó thành công trên Ubuntu; chưa xác nhận cài/chạy trên điện thoại thật hoặc máy của thành viên khác.
 
-Bộ [MainActivityTest](app/src/test/java/com/example/wikipediaclient/MainActivityTest.java) kiểm tra điều hướng/Back, giữ query và saved state, tính nhất quán của bài mẫu, Intent chia sẻ, thư viện rỗng, UI lịch sử, lưu cỡ chữ, icon thanh hệ thống và khoảng đệm bàn phím. [HistoryRepositoryTest](app/src/test/java/com/example/wikipediaclient/HistoryRepositoryTest.java) kiểm tra chống trùng, thứ tự và dữ liệu bền vững. [PersonalStorageTest](app/src/test/java/com/example/wikipediaclient/PersonalStorageTest.java) kiểm tra chuyển dữ liệu cũ, bảo vệ metadata mới, giữ bookmark khi xóa history và chặn truy cập DB trên main thread. Các test UI dùng repository tìm kiếm giả; test ADB mới đi qua Volley/API thật.
+Bộ [MainActivityTest](app/src/test/java/com/example/wikipediaclient/MainActivityTest.java) kiểm tra điều hướng/Back, giữ query và saved state, HTML/metadata cùng bài khi A → B → Back, Intent chia sẻ canonical, lỗi WebView, thư viện rỗng, UI lịch sử, lưu cỡ chữ, icon thanh hệ thống và khoảng đệm bàn phím. [HistoryRepositoryTest](app/src/test/java/com/example/wikipediaclient/HistoryRepositoryTest.java) kiểm tra chống trùng, thứ tự và dữ liệu bền vững. [PersonalStorageTest](app/src/test/java/com/example/wikipediaclient/PersonalStorageTest.java) kiểm tra chuyển dữ liệu cũ, bảo vệ metadata mới, giữ bookmark khi xóa history và chặn truy cập DB trên main thread. Các test UI dùng repository tìm kiếm/bài viết giả; test thiết bị đi qua Volley/API thật. Suite reader còn kiểm tra response cũ, retry bookmark lỗi và saved state nhỏ sau process death.
 
-Robolectric chạy API 28. Kiểm thử ADB dùng emulator `medium_phone`, Android 16/API 36 và fixture được gắn nhãn rõ ràng cho dữ liệu cá nhân. Reader vẫn là prototype; kiểm thử mở bài xác nhận đúng metadata và điều hướng, chưa xác nhận HTML/WebView toàn bài. Chưa bao phủ thiết bị thật, TalkBack hoặc tablet.
+Robolectric chạy API 28. Kiểm thử ADB dùng emulator `medium_phone`, Android 16/API 36 và fixture được gắn nhãn rõ ràng cho dữ liệu cá nhân. Reader đã được kiểm tra bằng WebView thực với bài Hà Nội, Hệ Mặt Trời và alias Hà Thành; fixture riêng kiểm tra bảng rộng và ảnh hỏng. Chưa bao phủ thiết bị thật, TalkBack hoặc tablet.
 
 Ngày 22/10/2026, **11/11 nhóm kiểm tra ADB đạt** trên APK tích hợp: lịch sử đúng thứ tự/mở bài/Back; xóa bền vững; xác nhận xóa qua xoay máy; phục hồi JSON cũ bị lỗi; bookmark mở/xóa/hủy và giữ sau khởi động lại; xóa history giữ bookmark; tìm kiếm Wikipedia thật và tải thêm; giữ query qua xoay/Back/đổi tab; khôi phục đúng màn hình sau khi process thật sự dừng; không phát sinh crash. Script xác minh SHA-256 APK và khôi phục chính xác database/preferences trước khi mở lại app.
 
@@ -185,17 +185,29 @@ app/src/test/                     # Unit tests Robolectric
 | TV4 | Database, repository yêu thích/lịch sử và UI yêu thích |
 | TV5 | Settings, nguồn/chia sẻ và kiểm thử tích hợp |
 
-Mỗi phần hiện có giao diện mẫu hoặc điểm tích hợp để chủ feature phát triển tiếp. Khi nối API, dùng metadata của bài đã resolve cho nội dung, yêu thích, lịch sử, nguồn và chia sẻ. Không truyền HTML dài qua navigation; không giữ Activity hoặc View trong ViewModel. HTTP/database cần nằm trong lớp dữ liệu, công việc blocking chạy ngoài main thread.
+Tìm kiếm, reader và lưu dữ liệu cá nhân đã tích hợp. Reader dùng metadata của bài đã resolve cho nội dung, yêu thích, lịch sử, nguồn và chia sẻ. Không truyền HTML dài qua navigation; không giữ Activity hoặc View trong ViewModel. HTTP/database cần nằm trong lớp dữ liệu, công việc blocking chạy ngoài main thread.
 
 Tạo nhánh ngắn theo phần việc, chẳng hạn `feature/search` hoặc `feature/article`. Trước pull request, chạy ba task build/lint/test ở trên và ghi rõ kiểm tra thiết bị đã thực hiện. Thống nhất thay đổi Gradle, manifest, navigation và dependency dùng chung với TV1; thay đổi schema dữ liệu với TV4.
 
 Không commit SDK/JDK cục bộ, `local.properties`, output build, khóa ký, token hoặc khóa API. README này là tài liệu chung trên GitHub; kế hoạch, ghi chép và ảnh kiểm thử cá nhân chưa được đưa vào repository.
 
-## Phần triển khai tiếp theo
+## Reader TV3: luồng đọc và kiểm chứng
 
-- Nối API nội dung toàn bài với reader; bổ sung kiểm thử mất mạng/redirect trên nội dung thật.
-- Thay reader mẫu bằng HTML/WebView; giữ nội dung và metadata cùng bài khi chuyển link, redirect và Back.
-- Nối reader thật với `HistoryRepository.recordRead()` sau khi hiển thị thành công và với BookmarkRepository để thêm/bỏ yêu thích.
-- Tích hợp nguồn/giấy phép theo metadata, cỡ chữ hiện có và các ca kiểm thử lifecycle trên reader thật.
+`RemoteArticleRepository.getContent()` tải JSON `/w/rest.php/v1/page/{title}/with_html`. `ArticleContentMapper` giữ HTML, ID/title/key đã resolve, revision và giấy phép trong cùng `ArticleContent`. ViewModel giữ đối tượng này trong phiên; `SavedStateHandle` chỉ chứa locator và tỷ lệ cuộn, không chứa HTML/WebView/Activity. Sau process death, app tải lại nội dung hoặc hiển thị lỗi kết nối.
 
-Ứng dụng là đồ án học tập của nhóm, không phải ứng dụng chính thức của Wikimedia. Reader mẫu chưa tải toàn bài Wikipedia; nguồn và giấy phép nội dung cần được tích hợp đầy đủ khi nối reader thật.
+`ArticleFragment` dùng `loadDataWithBaseURL()` và navigation native cho A → B → Back. WebView chỉ điều hướng trong tài liệu với anchor; URL không hỗ trợ bị chặn. Sau callback hiển thị thành công, reader ghi lịch sử bằng ID cuối cùng và bật các thao tác cho đúng bài. Yêu thích chạy trên disk executor, có retry khi ghi lỗi; cỡ chữ lấy từ ReaderSettings. Back/xoay máy phục hồi tỷ lệ cuộn và kiểm tra sai lệch tối đa một màn hình; người dùng chạm sẽ dừng tự phục hồi vị trí.
+
+Bộ nghiệm thu WebView thực chạy độc lập, cần cài cả APK app và APK androidTest:
+
+```powershell
+.\tools\build-local.ps1 -Tasks assembleDebug,assembleDebugAndroidTest,lintDebug,testDebugUnitTest
+adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s emulator-5554 install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+python tools/test-tv3-device.py --adb adb --serial emulator-5554
+```
+
+Script lưu báo cáo JSON, ảnh, crash log, SHA-256 APK và bản sao dữ liệu tại `build/tv3-device`. Nó kiểm tra bài thật/alias, Back, xoay máy, anchor chú thích, nguồn link ngoài, cỡ chữ, lưu đúng bài và process death thật; fixture riêng mô phỏng bảng rộng/ảnh hỏng. Script sao lưu rồi khôi phục database/preferences và thiết lập xoay trong `finally`. Không thao tác đồng thời trên thiết bị khi chạy.
+
+Ngày 22/10/2026: **23/23 kiểm tra emulator đạt**, Android 16/API 36, WebView 133.0.6943.137; database/preferences đã được đối chiếu khôi phục đúng từng byte. Không phát sinh crash app. Ảnh và JSON chi tiết nằm tại máy build, không lưu trong Git. Tên/phiên bản bài có thể thay đổi khi chạy lại với Wikipedia đang hoạt động.
+
+Chưa xác nhận trên điện thoại thật, TalkBack hoặc tablet. Bookmark không bảo đảm đọc ngoại tuyến; các tiện ích tương tác phụ thuộc JavaScript của Wikipedia nằm ngoài phạm vi. Ứng dụng là đồ án học tập, không phải ứng dụng chính thức của Wikimedia. Nguồn và giấy phép bài lấy từ response API và được hiển thị trong reader.

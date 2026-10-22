@@ -18,7 +18,7 @@
     <string name="search_error_unknown">Đã xảy ra lỗi không xác định. Hãy thử lại.</string>
     <string name="search_load_more_failed">Không tải thêm được kết quả.</string>
     <string name="sample_title">Văn Miếu – Quốc Tử Giám</string>
-    <string name="sample_action">Xem bài viết mẫu</string>
+    <string name="sample_action">Đọc bài viết</string>
     <string name="sample_disclaimer">Nội dung mẫu cục bộ, không phải bài viết tải từ Wikipedia.</string>
     <string name="library_empty_title">Giữ lại điều đáng nhớ</string>
     <string name="library_empty_message">Bạn đã xóa tất cả bài mẫu trong phiên này. Tính năng lưu yêu thích thật chưa được triển khai.</string>
@@ -42,7 +42,7 @@
     <string name="featured_tag">Bài viết chọn lọc</string>
 
     <string name="tip_title">Mẹo đọc tri thức</string>
-    <string name="tip_body">Các thẻ bên dưới dùng để xem trước giao diện. Tìm kiếm và nội dung Wikipedia thật sẽ được bổ sung sau.</string>
+    <string name="tip_body">Chạm một bài gợi ý hoặc tìm kiếm để đọc nội dung Wikipedia qua mạng. Yêu thích lưu liên kết để bạn mở lại.</string>
 
     <string name="suggested_articles">Bài viết gợi ý</string>
     <string name="sort_action">Sắp xếp</string>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reader_bookmark_add">Lưu yêu thích</string>
+    <string name="reader_bookmark_remove">Bỏ yêu thích</string>
+    <string name="reader_bookmark_retry">Không thể cập nhật yêu thích. Chạm để thử lại</string>
+    <string name="reader_content_description">Nội dung bài Wikipedia</string>
+    <string name="reader_loading">Đang tải nội dung Wikipedia…</string>
+    <string name="reader_error_title">Không tải được bài viết</string>
+    <string name="reader_network_error">Kiểm tra kết nối mạng rồi thử lại. Bài đã lưu yêu thích chỉ lưu liên kết, cần mạng để đọc.</string>
+    <string name="reader_data_error">Nội dung trả về không hợp lệ. Bạn có thể thử lại sau.</string>
+    <string name="reader_missing">Bài không tồn tại hoặc đã bị xóa. Hãy quay lại danh sách để chọn bài khác.</string>
+    <string name="reader_rate_limit">Wikipedia đang giới hạn truy cập. Hãy chờ vài phút rồi mở lại bài.</string>
+    <string name="reader_unsupported_url">Liên kết này không được hỗ trợ.</string>
+    <string name="reader_license_format">Wikipedia · %1$s · Phiên bản %2$d</string>
+    <string name="reader_share_link">Chia sẻ</string>
+    <string name="reader_source">Bài gốc</string>
+    <string name="reader_renderer_error">Trình hiển thị đã dừng. Quay lại danh sách để mở lại bài.</string>
+</resources>

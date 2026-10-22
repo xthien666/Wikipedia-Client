@@ -23,6 +23,12 @@ public final class AppContainer {
     }
     /** Allows deterministic UI tests to supply a search repository without real networking. */
     public AppContainer(Context context, com.example.wikipediaclient.data.repository.SearchRepository searchRepository) {
+        this(context, searchRepository, null);
+    }
+    /** Injects full article loading in tests without opening real network connections. */
+    public AppContainer(Context context, com.example.wikipediaclient.data.repository.SearchRepository searchRepository,
+            com.example.wikipediaclient.data.repository.ArticleRepository articleRepository) {
+        this.articleRepository = articleRepository;
         this.searchRepository = searchRepository;
         applicationContext = context.getApplicationContext();
         readerSettings = new com.example.wikipediaclient.data.local.ReaderSettings(applicationContext);

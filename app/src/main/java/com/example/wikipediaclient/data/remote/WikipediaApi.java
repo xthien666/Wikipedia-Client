@@ -55,6 +55,16 @@ public final class WikipediaApi {
         return get(buildSummaryUrl(title), callback);
     }
 
+    public static String buildContentUrl(String title) {
+        return new Uri.Builder().scheme("https").authority("vi.wikipedia.org")
+                .appendPath("w").appendPath("rest.php").appendPath("v1").appendPath("page")
+                .appendPath(title.trim().replace(' ', '_')).appendPath("with_html").build().toString();
+    }
+
+    public Cancelable content(String title, ApiCallback<JSONObject> callback) {
+        return get(buildContentUrl(title), callback);
+    }
+
     public void cancelAll() { queue.cancelAll(TAG); }
 
     private Cancelable get(String url, ApiCallback<JSONObject> callback) {
