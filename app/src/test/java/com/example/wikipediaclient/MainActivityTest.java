@@ -139,31 +139,16 @@ public class MainActivityTest {
         assertEquals("Hà Nội", input.getText().toString());
     }
 
-    @Test public void favoriteFiltersCannotRestoreDeletedSamplesAndEmptyFiltersStayReachable() {
+    /** Verifies an empty real library instead of the removed sample cards. */
+    @Test public void emptyLibraryUsesPersistentRepository() throws Exception {
         MainActivity activity = launch();
         ((BottomNavigationView) activity.findViewById(R.id.bottom_navigation)).setSelectedItemId(R.id.libraryFragment);
         idle();
-        activity.findViewById(R.id.btn_delete_1).performClick();
-        activity.findViewById(R.id.chip_fav_places).performClick();
-        assertEquals(View.GONE, activity.findViewById(R.id.card_fav_1).getVisibility());
-        assertEquals(View.VISIBLE, activity.findViewById(R.id.card_fav_2).getVisibility());
-        activity.findViewById(R.id.chip_fav_science).performClick();
-        assertEquals(View.VISIBLE, activity.findViewById(R.id.status).getVisibility());
-        assertTrue(activity.findViewById(R.id.chip_fav_all).isShown());
-        activity.findViewById(R.id.chip_fav_all).performClick();
-        assertEquals(View.GONE, activity.findViewById(R.id.status).getVisibility());
-        assertEquals(View.GONE, activity.findViewById(R.id.card_fav_1).getVisibility());
-        controller.recreate();
+        ((WikiApplication) activity.getApplication()).getContainer().getDiskExecutor()
+                .submit(() -> { }).get(10, java.util.concurrent.TimeUnit.SECONDS);
         idle();
-        activity = controller.get();
-        assertEquals(View.GONE, activity.findViewById(R.id.card_fav_1).getVisibility());
-        activity.findViewById(R.id.btn_delete_2).performClick();
-        activity.findViewById(R.id.chip_fav_all).performClick();
         assertEquals(View.VISIBLE, activity.findViewById(R.id.status).getVisibility());
-        assertEquals(View.GONE, activity.findViewById(R.id.card_fav_2).getVisibility());
-        assertTrue(activity.findViewById(R.id.chip_fav_all).isShown());
-        assertEquals(activity.getString(R.string.tab_all, 0),
-                ((TextView) activity.findViewById(R.id.chip_fav_all)).getText().toString());
+        assertEquals(View.GONE, activity.findViewById(R.id.bookmark_list).getVisibility());
     }
 
     @Test public void historyRemovalsAndCountsSurviveRecreationAndClearRequiresConfirmation() {

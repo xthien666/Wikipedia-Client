@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bookmark_retry">Try again</string>
+    <string name="bookmark_network_notice">Saved articles are links, not offline copies. An internet connection is needed to read them.</string>
+    <string name="bookmark_loading">Loading saved articles…</string>
+    <string name="bookmark_error_title">Could not update saved articles</string>
+    <string name="bookmark_error_message">Your changes could not be completed. Please try again.</string>
+    <string name="bookmark_empty_title">No saved articles yet</string>
+    <string name="bookmark_empty_message">Articles you save while reading will appear here.</string>
+    <string name="bookmark_saved_at">Saved %1$s</string>
+    <string name="bookmark_open">Read article</string>
+    <string name="bookmark_open_description">Read %1$s</string>
+    <string name="bookmark_remove_description">Remove %1$s from saved articles</string>
+    <string name="bookmark_remove_title">Remove saved article?</string>
+    <string name="bookmark_remove_message">Remove “%1$s” from your saved articles? Reading history will be kept.</string>
+    <string name="bookmark_remove">Remove</string>
+    <string name="bookmark_cancel">Cancel</string>
+    <plurals name="bookmark_count">
+        <item quantity="one">%d saved article</item>
+        <item quantity="other">%d saved articles</item>
+    </plurals>
+</resources>
