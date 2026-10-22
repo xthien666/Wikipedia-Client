@@ -25,8 +25,4 @@
     <string name="bookmark_remove_message">Remove “%1$s” from your saved articles? Reading history will be kept.</string>
     <string name="bookmark_remove">Remove</string>
     <string name="bookmark_cancel">Cancel</string>
-    <plurals name="bookmark_count">
-        <item quantity="one">%d saved article</item>
-        <item quantity="other">%d saved articles</item>
-    </plurals>
 </resources>

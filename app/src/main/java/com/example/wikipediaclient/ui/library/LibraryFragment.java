@@ -38,7 +38,6 @@ public final class LibraryFragment extends Fragment implements BookmarkAdapter.L
         adapter.setStateRestorationPolicy(BookmarkAdapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY);
         binding.bookmarkList.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.bookmarkList.setAdapter(adapter);
-        binding.bookmarkList.setNestedScrollingEnabled(false);
         binding.chipFavAll.setSelected(true);
         binding.chipFavAll.setText(getString(R.string.bookmark_all, 0));
         binding.chipFavAll.setOnClickListener(v -> model.refresh());
