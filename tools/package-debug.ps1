@@ -37,7 +37,7 @@ try {
     if ($DeviceReport) {
         $evidence = Get-Content -LiteralPath $DeviceReport -Raw | ConvertFrom-Json
         if ($evidence.result -ne 'PASS' -or $evidence.apkSha256 -ne $apkHash -or
-            -not $evidence.historyAndRotationRestored -or @($evidence.checks).Count -eq 0 -or
+            -not $evidence.historyAndRotationRestored -or -not $evidence.sqliteAndPreferencesRestored -or @($evidence.checks).Count -eq 0 -or
             @($evidence.checks | Where-Object { $_.result -ne 'PASS' }).Count -gt 0) {
             throw 'Device evidence must pass, restore app data and match the packaged APK SHA-256.'
         }

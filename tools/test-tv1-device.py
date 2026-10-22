@@ -1,4 +1,4 @@
-"""ADB smoke test for the TV1 prototype. Backs up and restores history fixtures.
+"""ADB integration test for TV1 navigation, history, search and the real reader. Backs up and restores history fixtures.
 
 Requires Python 3, a debug APK already installed, and an unlocked ADB target.
 Example: python tools/test-tv1-device.py --adb PATH_TO_ADB --serial emulator-5554
@@ -134,6 +134,7 @@ def rotate(value):
 backup = {}
 rotation = {}
 failure = None
+backup_complete = False
 try:
     report["androidApi"] = shell("getprop", "ro.build.version.sdk")
     report["androidRelease"] = shell("getprop", "ro.build.version.release")
@@ -157,6 +158,7 @@ try:
             name: None if value is None else base64.b64encode(value).decode("ascii")
             for name, value in backup.items()}},
         ensure_ascii=False), encoding="utf-8")
+    backup_complete = True
     now = int(time.time() * 1000)
     fixture = [dict(language="vi", pageId=1, title="Bài A kiểm thử", canonicalUrl="https://vi.wikipedia.org/wiki/A", lastReadAt=now-10000),
                dict(language="vi", pageId=2, title="Bài B kiểm thử", canonicalUrl="https://vi.wikipedia.org/wiki/B", lastReadAt=now)]
@@ -258,7 +260,7 @@ try:
     require("query_input", "Ha Noi")
     rotate(0)
     require("query_input", "Ha Noi")
-    # Real Volley/API path: opening a search hit still leads to the prototype reader.
+    # Real Volley/API search and full reader must finish before navigation assertions.
     for _ in range(12):
         root = tree("search-live")
         result_node = find(root, "result_title")
@@ -281,6 +283,10 @@ try:
     passed("Live Wikipedia search and explicit load-more complete successfully")
     tap("result_title", text=title)
     require("article_title", title)
+    for _ in range(20):
+        if require("action_share").get("enabled") == "true": break
+        time.sleep(1)
+    else: raise AssertionError("Full article did not render")
     shell("input", "keyevent", "4")
     require("query_input", "Ha Noi")
     passed("Search query survives rotation and article Back")
@@ -291,6 +297,10 @@ try:
 
     tap("result_title", text=title)
     require("article_title", title)
+    for _ in range(20):
+        if require("action_share").get("enabled") == "true": break
+        time.sleep(1)
+    else: raise AssertionError("Full article did not render")
     shell("input", "keyevent", "3")
     # ActivityManager may protect a recently foreground process briefly; kill is asynchronous too.
     for _ in range(15):
@@ -303,9 +313,13 @@ try:
         raise AssertionError("Background process did not stop")
     launch()
     require("article_title", title)
+    for _ in range(20):
+        if require("action_share").get("enabled") == "true": break
+        time.sleep(1)
+    else: raise AssertionError("Full article did not render")
     shell("input", "keyevent", "4")
     require("query_input", "Ha Noi")
-    passed("Background process kill restores prototype article and query on return")
+    passed("Background process kill restores rendered real article and query on return")
     crash_after = adb("logcat", "-b", "crash", "-d").stdout
     (output / "crash-log.txt").write_bytes(crash_after)
     assert crash_after == crash_before or package.encode() not in crash_after[len(crash_before):], "New app crash detected"
@@ -317,27 +331,28 @@ except Exception as error:
     print("FAIL:", failure, flush=True)
 finally:
     try:
-        stop()
-        shell("run-as", package, "mkdir", "-p", "shared_prefs", "databases")
-        for name, content in backup.items():
-            if content is None:
-                shell("run-as", package, "rm", "-f", name)
-            else:
-                adb("shell", "run-as", package, "tee", name, data=content)
-        for key, value in rotation.items():
-            if value == "null":
-                shell("settings", "delete", "system", key)
-            else:
-                shell("settings", "put", "system", key, value)
-        for name, content in backup.items():
-            result = adb("exec-out", "run-as", package, "cat", name, check=False)
-            if content is None:
-                assert result.returncode != 0, "Unexpected restored file: " + name
-            else:
-                assert result.returncode == 0 and result.stdout == content, "Restore mismatch: " + name
-        launch()
-        report["historyAndRotationRestored"] = True
-        report["sqliteAndPreferencesRestored"] = True
+        if backup_complete:
+            stop()
+            shell("run-as", package, "mkdir", "-p", "shared_prefs", "databases")
+            for name, content in backup.items():
+                if content is None:
+                    shell("run-as", package, "rm", "-f", name)
+                else:
+                    adb("shell", "run-as", package, "tee", name, data=content)
+            for key, value in rotation.items():
+                if value == "null":
+                    shell("settings", "delete", "system", key)
+                else:
+                    shell("settings", "put", "system", key, value)
+            for name, content in backup.items():
+                result = adb("exec-out", "run-as", package, "cat", name, check=False)
+                if content is None:
+                    assert result.returncode != 0, "Unexpected restored file: " + name
+                else:
+                    assert result.returncode == 0 and result.stdout == content, "Restore mismatch: " + name
+            launch()
+            report["historyAndRotationRestored"] = True
+            report["sqliteAndPreferencesRestored"] = True
     except Exception as error:
         report["restoreError"] = str(error)
         failure = failure or str(error)

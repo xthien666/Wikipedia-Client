@@ -9,6 +9,9 @@ import com.example.wikipediaclient.data.model.ArticleLocator;
 public final class ArticleNavigator {
     private ArticleNavigator() {}
     public static void open(Fragment source, ArticleLocator locator) {
+        open(source, locator, null);
+    }
+    public static void open(Fragment source, ArticleLocator locator, String anchor) {
         NavController controller = NavHostFragment.findNavController(source);
         Bundle current = controller.getCurrentBackStackEntry() == null ? null
                 : controller.getCurrentBackStackEntry().getArguments();
@@ -22,6 +25,7 @@ public final class ArticleNavigator {
         Bundle args = new Bundle();
         args.putString("title", locator.getTitle());
         args.putString("language", locator.getLanguage());
+        args.putString("anchor", anchor);
         if (locator.getPageId() != null) args.putLong("pageId", locator.getPageId());
         controller.navigate(R.id.action_open_article, args);
     }

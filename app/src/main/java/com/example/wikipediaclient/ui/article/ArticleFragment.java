@@ -14,7 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.fragment.NavHostFragment;
+import com.example.wikipediaclient.ui.navigation.ArticleNavigator;
 import com.example.wikipediaclient.R;
 import com.example.wikipediaclient.WikiApplication;
 import com.example.wikipediaclient.data.AppContainer;
@@ -107,11 +107,7 @@ public final class ArticleFragment extends Fragment {
                     if (target.anchor != null) binding.articleBody.loadUrl(target.url);
                     return true;
                 }
-                Bundle args = new Bundle();
-                args.putString("title", target.locator.getTitle());
-                args.putString("language", "vi");
-                args.putString("anchor", target.anchor);
-                NavHostFragment.findNavController(this).navigate(R.id.action_open_article, args);
+                ArticleNavigator.open(this, target.locator, target.anchor);
                 return true;
             case EXTERNAL: open(new Intent(Intent.ACTION_VIEW, Uri.parse(target.url))); return true;
             default: Toast.makeText(requireContext(), R.string.reader_unsupported_url, Toast.LENGTH_SHORT).show(); return true;

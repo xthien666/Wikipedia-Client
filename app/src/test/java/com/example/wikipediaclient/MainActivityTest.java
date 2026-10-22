@@ -163,6 +163,24 @@ public class MainActivityTest {
         assertTrue(shadow.getLastLoadDataWithBaseURL().data.contains(titleA));
     }
 
+    @Test public void rapidReaderLinkTapsPushOnlyOneEntryAndPreserveAnchor() {
+        MainActivity activity = launch(); activity.findViewById(R.id.open_sample).performClick(); idle();
+        String titleA = ((TextView) activity.findViewById(R.id.article_title)).getText().toString();
+        android.webkit.WebView web = activity.findViewById(R.id.article_body);
+        org.robolectric.shadows.ShadowWebView shadow = Shadows.shadowOf(web);
+        android.webkit.WebViewClient client = shadow.getWebViewClient();
+        client.onPageCommitVisible(web, shadow.getLastLoadDataWithBaseURL().baseUrl);
+        String link = "https://vi.wikipedia.org/wiki/Vi%E1%BB%87t_Nam#History";
+        client.shouldOverrideUrlLoading(web, link);
+        client.shouldOverrideUrlLoading(web, link);
+        idle();
+        assertEquals("History", navigation(activity).getCurrentBackStackEntry().getArguments().getString("anchor"));
+        activity.getOnBackPressedDispatcher().onBackPressed(); idle();
+        assertEquals(titleA, ((TextView) activity.findViewById(R.id.article_title)).getText().toString());
+        activity.getOnBackPressedDispatcher().onBackPressed(); idle();
+        assertEquals(R.id.searchFragment, navigation(activity).getCurrentDestination().getId());
+    }
+
     @Test public void mainFrameErrorCannotBeRecordedAsSuccessfulArticleByLatePageFinished() {
         MainActivity activity = launch(); activity.findViewById(R.id.open_sample).performClick(); idle();
         android.webkit.WebView web = activity.findViewById(R.id.article_body);

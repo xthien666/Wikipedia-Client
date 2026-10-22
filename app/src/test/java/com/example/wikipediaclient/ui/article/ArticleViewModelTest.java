@@ -86,6 +86,29 @@ public class ArticleViewModelTest {
         assertTrue(bookmarks.value); assertFalse(model.state().getValue().bookmarkError);
         model.toggleBookmark(); idle(); assertFalse(bookmarks.value);
     }
+    @Test public void lifecycleRefreshPreservesFailedSaveAndRemoveUntilExplicitRetry() {
+        load();
+        for (boolean desired : new boolean[]{true, false}) {
+            bookmarks.fail = true; model.toggleBookmark(); idle();
+            model.refreshBookmark(); idle();
+            assertTrue(model.state().getValue().bookmarkError);
+            assertEquals(desired, model.state().getValue().bookmarked);
+            bookmarks.fail = false; model.retryBookmark(); idle();
+            assertEquals(desired, bookmarks.value);
+            assertFalse(model.state().getValue().bookmarkError);
+        }
+    }
+    @Test public void lifecycleRefreshCannotSupersedePendingWriteFailure() {
+        List<Runnable> tasks = new ArrayList<>();
+        model = new ArticleViewModel(articles, bookmarks, history, tasks::add, saved);
+        load(); tasks.remove(0).run(); idle();
+        bookmarks.fail = true; model.toggleBookmark(); model.refreshBookmark();
+        assertEquals(1, tasks.size());
+        tasks.remove(0).run(); idle();
+        assertTrue(model.state().getValue().bookmarkError);
+        bookmarks.fail = false; model.retryBookmark(); tasks.remove(0).run(); idle();
+        assertTrue(bookmarks.value);
+    }
     @Test public void rapidTogglesAreSerializedAndIgnoreEarlierCallbacks() {
         List<Runnable> tasks = new ArrayList<>();
         model = new ArticleViewModel(articles, bookmarks, history, tasks::add, saved);

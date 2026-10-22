@@ -32,7 +32,7 @@ public final class ArticleViewModel extends ViewModel {
     private final MutableLiveData<State> state = new MutableLiveData<>();
     private ArticleContent content;
     private WikiApiException error;
-    private boolean loading, bookmarked, bookmarkReady, bookmarkError;
+    private boolean loading, bookmarked, bookmarkReady, bookmarkError, bookmarkPending;
     private volatile boolean cleared;
     private int generation, bookmarkGeneration;
     private Cancelable request;
@@ -47,7 +47,9 @@ public final class ArticleViewModel extends ViewModel {
     public void retry() {
         int token = ++generation;
         if (request != null) request.cancel();
-        content = null; error = null; loading = true; bookmarkReady = false; publish();
+        content = null; error = null; loading = true; bookmarkReady = false;
+        bookmarkGeneration++; bookmarkPending = false; bookmarkError = false; failedBookmark = null;
+        publish();
         String title = saved.get("title");
         request = articles.getContent(title, new ApiCallback<ArticleContent>() {
             @Override public void onSuccess(ArticleContent value) {
@@ -60,14 +62,18 @@ public final class ArticleViewModel extends ViewModel {
             }
         });
     }
-    public void refreshBookmark() { bookmarkReady = false; bookmark(null); }
+    public void refreshBookmark() {
+        // Lifecycle refresh must not replace an in-flight write or discard its retry intent.
+        if (bookmarkPending || bookmarkError) return;
+        bookmarkReady = false; bookmark(null);
+    }
     public void toggleBookmark() { if (content != null && bookmarkReady) bookmark(!bookmarked); }
     public void retryBookmark() { bookmark(failedBookmark); }
     private void bookmark(Boolean desired) {
         if (content == null) return;
         ArticleContent selected = content;
         int token = ++bookmarkGeneration;
-        bookmarkError = false;
+        bookmarkError = false; bookmarkPending = true;
         if (desired != null) bookmarked = desired;
         publish();
         disk.execute(() -> {
@@ -82,12 +88,12 @@ public final class ArticleViewModel extends ViewModel {
                 if (desired == null && actual) bookmarks.saveBookmark(selected.article, System.currentTimeMillis());
                 main.post(() -> {
                     if (cleared || token != bookmarkGeneration || content != selected) return;
-                    bookmarked = actual; bookmarkReady = true; failedBookmark = null; publish();
+                    bookmarkPending = false; bookmarked = actual; bookmarkReady = true; failedBookmark = null; publish();
                 });
             } catch (RuntimeException exception) {
                 main.post(() -> {
                     if (cleared || token != bookmarkGeneration || content != selected) return;
-                    bookmarkError = true; bookmarkReady = false; failedBookmark = desired; publish();
+                    bookmarkPending = false; bookmarkError = true; bookmarkReady = false; failedBookmark = desired; publish();
                 });
             }
         });

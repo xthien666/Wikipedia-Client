@@ -131,7 +131,9 @@ Thay `emulator-5554` bằng serial thực tế. Script cần Python 3, APK debug
 
 ## Kiểm thử và CI
 
-Ngày 22/10/2026, bản tích hợp TV1/TV2/TV3/TV4 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **64/64 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle, tính bền vững của SQLite, thử lại thao tác ghi/xóa lỗi và nhận diện bài trong back stack theo pageId. GitHub Actions đã build/test bản tích hợp trước đó thành công trên Ubuntu; chưa xác nhận cài/chạy trên điện thoại thật hoặc máy của thành viên khác.
+Ngày 22/10/2026, bản tích hợp TV1/TV2/TV3/TV4 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **67/67 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle, tính bền vững của SQLite, thử lại thao tác ghi/xóa lỗi và nhận diện bài trong back stack theo pageId. GitHub Actions đã build/test bản tích hợp trước đó thành công trên Ubuntu; chưa xác nhận cài/chạy trên điện thoại thật hoặc máy của thành viên khác.
+
+Hai test host `python -m unittest discover -s tools -p test_device_backup.py` kiểm tra script không xóa/ghi đè dữ liệu khi sao lưu thất bại giữa chừng; workflow CI cũng chạy hai ca này.
 
 Bộ [MainActivityTest](app/src/test/java/com/example/wikipediaclient/MainActivityTest.java) kiểm tra điều hướng/Back, giữ query và saved state, HTML/metadata cùng bài khi A → B → Back, Intent chia sẻ canonical, lỗi WebView, thư viện rỗng, UI lịch sử, lưu cỡ chữ, icon thanh hệ thống và khoảng đệm bàn phím. [HistoryRepositoryTest](app/src/test/java/com/example/wikipediaclient/HistoryRepositoryTest.java) kiểm tra chống trùng, thứ tự và dữ liệu bền vững. [PersonalStorageTest](app/src/test/java/com/example/wikipediaclient/PersonalStorageTest.java) kiểm tra chuyển dữ liệu cũ, bảo vệ metadata mới, giữ bookmark khi xóa history và chặn truy cập DB trên main thread. Các test UI dùng repository tìm kiếm/bài viết giả; test thiết bị đi qua Volley/API thật. Suite reader còn kiểm tra response cũ, retry bookmark lỗi và saved state nhỏ sau process death.
 
@@ -152,8 +154,8 @@ app/src/main/
 │   │   ├── AppContainer.java      # Dependency dùng chung
 │   │   ├── model/                # ArticleLocator, HistoryEntry
 │   │   ├── local/                # ReaderSettings, LocalHistoryRepository
-│   │   ├── remote/               # Package chuẩn bị cho API
-│   │   └── repository/           # API tìm kiếm/summary, SQLite bookmark và history
+│   │   ├── remote/               # Volley, JSON mapper và phân loại lỗi
+│   │   └── repository/           # API tìm kiếm/summary/HTML, SQLite bookmark và history
 │   └── ui/
 │       ├── navigation/
 │       ├── common/               # StatusView, SampleListViewModel
@@ -167,7 +169,7 @@ app/src/test/                     # Unit tests Robolectric
 .github/workflows/                # Kiểm tra tự động trên GitHub
 ```
 
-`AppContainer` cung cấp Volley RequestQueue dùng application context, Executor cho tác vụ blocking, ReaderSettings, SearchRepository, ArticleRepository, BookmarkRepository và HistoryRepository. SearchViewModel giữ query bằng SavedStateHandle; LibraryViewModel tải dữ liệu SQLite ngoài main thread. ArticleRepository hiện trả summary và metadata; chưa trả HTML toàn bài cho reader.
+`AppContainer` cung cấp Volley RequestQueue dùng application context, Executor cho tác vụ blocking, ReaderSettings, SearchRepository, ArticleRepository, BookmarkRepository và HistoryRepository. SearchViewModel giữ query bằng SavedStateHandle; LibraryViewModel tải dữ liệu SQLite ngoài main thread. ArticleRepository trả summary và nội dung HTML toàn bài cùng metadata đã resolve.
 
 ### Hợp đồng lịch sử để tích hợp reader
 
@@ -195,7 +197,7 @@ Không commit SDK/JDK cục bộ, `local.properties`, output build, khóa ký, t
 
 `RemoteArticleRepository.getContent()` tải JSON `/w/rest.php/v1/page/{title}/with_html`. `ArticleContentMapper` giữ HTML, ID/title/key đã resolve, revision và giấy phép trong cùng `ArticleContent`. ViewModel giữ đối tượng này trong phiên; `SavedStateHandle` chỉ chứa locator và tỷ lệ cuộn, không chứa HTML/WebView/Activity. Sau process death, app tải lại nội dung hoặc hiển thị lỗi kết nối.
 
-`ArticleFragment` dùng `loadDataWithBaseURL()` và navigation native cho A → B → Back. WebView chỉ điều hướng trong tài liệu với anchor; URL không hỗ trợ bị chặn. Sau callback hiển thị thành công, reader ghi lịch sử bằng ID cuối cùng và bật các thao tác cho đúng bài. Yêu thích chạy trên disk executor, có retry khi ghi lỗi; cỡ chữ lấy từ ReaderSettings. Back/xoay máy phục hồi tỷ lệ cuộn và kiểm tra sai lệch tối đa một màn hình; người dùng chạm sẽ dừng tự phục hồi vị trí.
+`ArticleFragment` dùng `loadDataWithBaseURL()` và navigation native cho A → B → Back. Liên kết nội bộ dùng chung ArticleNavigator để bỏ mở trùng khi chạm nhanh. WebView chỉ điều hướng trong tài liệu với anchor; URL không hỗ trợ bị chặn. Sau callback hiển thị thành công, reader ghi lịch sử bằng ID cuối cùng và bật các thao tác cho đúng bài. Yêu thích chạy trên disk executor; lỗi ghi và thao tác thử lại được giữ khi reader tạm dừng/tiếp tục; cỡ chữ lấy từ ReaderSettings. Back/xoay máy phục hồi tỷ lệ cuộn và kiểm tra sai lệch tối đa một màn hình; người dùng chạm sẽ dừng tự phục hồi vị trí.
 
 Bộ nghiệm thu WebView thực chạy độc lập, cần cài cả APK app và APK androidTest:
 

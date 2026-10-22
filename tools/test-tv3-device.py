@@ -13,7 +13,8 @@ def adb(*args,data=None,check=True,timeout=60):
 
 def shell(*args): return adb('shell',*args).stdout.decode('utf8','replace').strip()
 def files():
-    text=shell('run-as',pkg,'find','databases','shared_prefs','-type','f')
+    text=shell('run-as',pkg,'find','.', '-type','f')
+    text='\n'.join(line.removeprefix('./') for line in text.splitlines())
     return [s for s in text.splitlines() if re.fullmatch(r'(databases|shared_prefs)/[\w.\-]+',s)]
 def stop(): shell('am','force-stop',pkg)
 def tree():
@@ -21,12 +22,13 @@ def tree():
     start=raw.find('<?xml'); end=raw.rfind('</hierarchy>')
     if start<0 or end<0: raise RuntimeError(raw)
     return raw[start:end+12]
-backup={}; rotation={}; report={}; failure=None
+backup={}; rotation={}; report={}; failure=None; backup_complete=False
 try:
     stop()
     for name in files(): backup[name]=adb('exec-out','run-as',pkg,'cat',name).stdout
     (out/'data-backup.json').write_text(json.dumps({n:base64.b64encode(b).decode() for n,b in backup.items()}))
     for key in ('accelerometer_rotation','user_rotation'): rotation[key]=shell('settings','get','system',key)
+    backup_complete=True
     crash_before=adb('logcat','-b','crash','-d').stdout
     apk=shell('pm','path',pkg).splitlines()[0].removeprefix('package:')
     apk_sha=hashlib.sha256(adb('exec-out','cat',apk).stdout).hexdigest().upper()
@@ -80,19 +82,20 @@ except BaseException as exc:
     failure=exc; report.update(result='FAIL',hostFailure=str(exc))
 finally:
     try:
-        stop()
-        for name in files(): shell('run-as',pkg,'rm','-f',name)
-        for name,data in backup.items():
-            shell('run-as',pkg,'mkdir','-p',name.split('/')[0])
-            adb('shell','run-as',pkg,'tee',name,data=data)
-        restored={n:adb('exec-out','run-as',pkg,'cat',n).stdout for n in files()}
-        report['sqliteAndPreferencesRestored']=restored==backup
-        if restored!=backup: raise AssertionError('App data restore mismatch')
-        for key,value in rotation.items():
-            if value=='null': shell('settings','delete','system',key)
-            else: shell('settings','put','system',key,value)
-        report['historyAndRotationRestored']=True
-        shell('am','start','-W','-n',pkg+'/.MainActivity')
+        if backup_complete:
+            stop()
+            for name in files(): shell('run-as',pkg,'rm','-f',name)
+            for name,data in backup.items():
+                shell('run-as',pkg,'mkdir','-p',name.split('/')[0])
+                adb('shell','run-as',pkg,'tee',name,data=data)
+            restored={n:adb('exec-out','run-as',pkg,'cat',n).stdout for n in files()}
+            report['sqliteAndPreferencesRestored']=restored==backup
+            if restored!=backup: raise AssertionError('App data restore mismatch')
+            for key,value in rotation.items():
+                if value=='null': shell('settings','delete','system',key)
+                else: shell('settings','put','system',key,value)
+            report['historyAndRotationRestored']=True
+            shell('am','start','-W','-n',pkg+'/.MainActivity')
     except Exception as exc:
         failure=exc; report.update(result='FAIL',restoreFailure=str(exc))
     report['checks']=[{'name':c,'result':'PASS'} if isinstance(c,str) else c for c in report.get('checks',[])]
