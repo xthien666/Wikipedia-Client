@@ -31,7 +31,8 @@
         android:layout_height="0dp" android:layout_weight="1" android:saveEnabled="false"
         android:contentDescription="@string/reader_content_description" />
     <TextView android:id="@+id/article_license" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:paddingStart="@dimen/page_gutter"
+        android:layout_height="wrap_content" android:minHeight="48dp" android:gravity="center_vertical"
+        android:background="?attr/selectableItemBackground" android:paddingStart="@dimen/page_gutter"
         android:paddingEnd="@dimen/page_gutter" android:paddingTop="8dp" android:paddingBottom="8dp"
         android:textColor="@color/on_surface_variant" android:textSize="12sp" />
 </LinearLayout>

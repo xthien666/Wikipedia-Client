@@ -285,8 +285,9 @@ public class MainActivityTest {
     }
 
     private void drainDisk(MainActivity activity) throws Exception {
+        idle();
         ((WikiApplication) activity.getApplication()).getContainer().getDiskExecutor()
-                .submit(() -> {}).get();
+                .submit(() -> {}).get(10, java.util.concurrent.TimeUnit.SECONDS);
         idle();
     }
 

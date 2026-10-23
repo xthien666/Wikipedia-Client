@@ -213,3 +213,8 @@ Script lưu báo cáo JSON, ảnh, crash log, SHA-256 APK và bản sao dữ li�
 Ngày 22/10/2026: **23/23 kiểm tra emulator đạt**, Android 16/API 36, WebView 133.0.6943.137; database/preferences đã được đối chiếu khôi phục đúng từng byte. Không phát sinh crash app. Ảnh và JSON chi tiết nằm tại máy build, không lưu trong Git. Tên/phiên bản bài có thể thay đổi khi chạy lại với Wikipedia đang hoạt động. Ca chú thích lấy ID từ HTML đang hiển thị và chờ WebView cuộn; không phụ thuộc mã chú thích cố định. Mỗi lần instrumentation chỉ xuất ảnh của chính lần chạy đó.
 
 Chưa xác nhận trên điện thoại thật, TalkBack hoặc tablet. Bookmark không bảo đảm đọc ngoại tuyến; các tiện ích tương tác phụ thuộc JavaScript của Wikipedia nằm ngoài phạm vi. Ứng dụng là đồ án học tập, không phải ứng dụng chính thức của Wikimedia. Nguồn và giấy phép bài lấy từ response API và được hiển thị trong reader.
+
+
+## Bàn giao TV5 ngày 23/10/2026
+
+Component nguồn/chia sẻ ở `ui/source/ArticleSourceController`; About phân biệt nội dung Wikipedia và mã ứng dụng. Bản bàn giao giữ bốn mức 14/16/18/22 sp. Xem [hồ sơ và T01–T16](docs/TV5.md), [đặc tả cỡ chữ](docs/TV5-FONT-SPEC.md) và [kịch bản demo](docs/TV5-DEMO.md). Thông tin nhóm, Android thật/TalkBack và một số ca nghiệm thu còn chờ. Kết quả 79 unit test không có nghĩa toàn bộ T01–T16 đã đạt.

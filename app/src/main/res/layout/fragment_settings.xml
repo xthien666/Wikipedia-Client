@@ -400,6 +400,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="@string/settings_team_val"
+                    android:id="@+id/tv_team_details"
                     android:textColor="@color/on_surface_variant"
                     android:textSize="12sp" />
 
@@ -419,9 +420,12 @@
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_about_source"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:layout_marginTop="2dp"
                     android:text="@string/settings_source_val"
                     android:textColor="@color/secondary"
@@ -450,6 +454,25 @@
                     android:text="@string/settings_license_val"
                     android:textColor="@color/on_surface_variant"
                     android:textSize="12sp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_about_terms"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:minHeight="48dp" android:text="@string/about_terms" />
+                <TextView
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp" android:text="@string/about_app_license_title"
+                    android:textSize="13sp" android:textStyle="bold" android:textColor="@color/primary" />
+                <TextView
+                    android:id="@+id/tv_app_license"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" android:text="@string/about_app_license_value"
+                    android:textSize="12sp" android:textColor="@color/on_surface_variant" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_about_project"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:minHeight="48dp" android:text="@string/about_project" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

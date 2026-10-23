@@ -13,6 +13,7 @@ import com.example.wikipediaclient.R;
 import com.example.wikipediaclient.WikiApplication;
 import com.example.wikipediaclient.data.local.ReaderSettings;
 import com.example.wikipediaclient.databinding.FragmentSettingsBinding;
+import com.example.wikipediaclient.ui.source.ExternalActions;
 
 public final class SettingsFragment extends Fragment {
     private FragmentSettingsBinding binding;
@@ -29,6 +30,9 @@ public final class SettingsFragment extends Fragment {
         binding.btnClearCache.setEnabled(false);
         binding.tvCacheVal.setVisibility(View.GONE);
         binding.tvVersion.setText(getString(R.string.settings_version_val, BuildConfig.VERSION_NAME));
+        binding.btnAboutSource.setOnClickListener(v -> ExternalActions.openUrl(requireContext(), "https://vi.wikipedia.org/"));
+        binding.btnAboutTerms.setOnClickListener(v -> ExternalActions.openUrl(requireContext(), "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use"));
+        binding.btnAboutProject.setOnClickListener(v -> ExternalActions.openUrl(requireContext(), "https://github.com/xthien666/Wikipedia-Client"));
         render(settings.getFontSize());
     }
     private void selectFont(int size) { settings.setFontSize(size); render(size); }
@@ -50,6 +54,12 @@ public final class SettingsFragment extends Fragment {
             option.setBackgroundResource(selected ? R.drawable.bg_pill_dark : R.drawable.bg_pill_light);
             option.setTextColor(ContextCompat.getColor(requireContext(), selected ? R.color.on_primary : R.color.on_surface_variant));
             ViewCompat.setStateDescription(option, getString(selected ? R.string.option_selected : R.string.option_not_selected));
+            option.setContentDescription(getString(R.string.font_option_accessible, getString(switch (sizes[index]) {
+                case 14 -> R.string.font_small;
+                case 18 -> R.string.font_large;
+                case 22 -> R.string.font_huge;
+                default -> R.string.font_normal;
+            }), sizes[index]));
         }
     }
     @Override public void onDestroyView() { binding = null; super.onDestroyView(); }
