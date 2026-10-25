@@ -21,11 +21,13 @@ import com.example.wikipediaclient.data.AppContainer;
 import com.example.wikipediaclient.data.model.ArticleContent;
 import com.example.wikipediaclient.data.remote.WikiApiException;
 import com.example.wikipediaclient.databinding.FragmentArticleBinding;
+import com.example.wikipediaclient.ui.source.ArticleSourceController;
 
 public final class ArticleFragment extends Fragment {
     private FragmentArticleBinding binding;
     private ArticleViewModel model;
     private ArticleContent rendered;
+    private ArticleSourceController sourceActions;
     private boolean displayed, restoring, touched, renderFailed, rendererGone;
     private float restoreProgress;
     public ArticleFragment() { super(R.layout.fragment_article); }
@@ -33,6 +35,8 @@ public final class ArticleFragment extends Fragment {
     @Override public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
         super.onViewCreated(view, state);
         binding = FragmentArticleBinding.bind(view);
+        sourceActions = new ArticleSourceController(requireContext(), binding.actionShare,
+                binding.btnViewOriginal, binding.articleLicense);
         renderFailed = false; rendererGone = false;
         AppContainer container = ((WikiApplication) requireActivity().getApplication()).getContainer();
         model = new ViewModelProvider(this, ArticleViewModel.factory(this, requireArguments(), container))
@@ -85,14 +89,6 @@ public final class ArticleFragment extends Fragment {
         });
         binding.actionSave.setOnClickListener(v -> model.toggleBookmark());
         binding.bookmarkRetry.setOnClickListener(v -> model.retryBookmark());
-        binding.actionShare.setOnClickListener(v -> {
-            if (!displayed || rendered == null) return;
-            open(Intent.createChooser(new Intent(Intent.ACTION_SEND).setType("text/plain")
-                    .putExtra(Intent.EXTRA_TEXT, rendered.article.getCanonicalUrl()), getString(R.string.share_article)));
-        });
-        binding.btnViewOriginal.setOnClickListener(v -> {
-            if (displayed && rendered != null) open(new Intent(Intent.ACTION_VIEW, Uri.parse(rendered.article.getCanonicalUrl())));
-        });
         model.state().observe(getViewLifecycleOwner(), this::render);
         model.start();
     }
@@ -135,18 +131,13 @@ public final class ArticleFragment extends Fragment {
             binding.articleTitle.setText(rendered.article.getTitle());
             binding.status.showLoading(R.string.reader_loading);
             binding.articleBody.setVisibility(View.VISIBLE);
-            binding.articleLicense.setText(getString(R.string.reader_license_format, rendered.licenseTitle, rendered.revision));
-            binding.articleLicense.setVisibility(View.VISIBLE);
-            binding.articleLicense.setOnClickListener(v -> open(new Intent(Intent.ACTION_VIEW, Uri.parse(rendered.licenseUrl))));
-            binding.articleLicense.setContentDescription(getString(R.string.reader_license_format, rendered.licenseTitle, rendered.revision));
             binding.articleBody.loadDataWithBaseURL(rendered.article.getCanonicalUrl(), ArticleHtml.document(rendered),
                     "text/html", "UTF-8", null);
         }
         binding.bookmarkRetry.setVisibility(state.bookmarkError && displayed ? View.VISIBLE : View.GONE);
         binding.actionSave.setText(state.bookmarked ? R.string.reader_bookmark_remove : R.string.reader_bookmark_add);
         binding.actionSave.setEnabled(displayed && state.bookmarkReady);
-        binding.actionShare.setEnabled(displayed);
-        binding.btnViewOriginal.setEnabled(displayed);
+        sourceActions.bind(rendered, displayed);
     }
     private void committed(WebView view) {
         if (binding == null || view != binding.articleBody || rendered == null || displayed || renderFailed) return;
@@ -180,7 +171,7 @@ public final class ArticleFragment extends Fragment {
     }
     private void renderFailure() {
         displayed = false; renderFailed = true;
-        binding.actionSave.setEnabled(false); binding.actionShare.setEnabled(false); binding.btnViewOriginal.setEnabled(false);
+        binding.actionSave.setEnabled(false); sourceActions.bind(null, false);
         binding.articleBody.setVisibility(View.GONE);
         binding.status.showError(R.string.reader_error_title, getString(R.string.reader_data_error), model::retry);
     }
@@ -194,6 +185,7 @@ public final class ArticleFragment extends Fragment {
     @android.annotation.SuppressLint("ClickableViewAccessibility")
     @Override public void onDestroyView() {
         saveProgress();
+        sourceActions.release(); sourceActions = null;
         WebView web = binding.articleBody;
         if (!rendererGone) {
             web.stopLoading(); web.setOnScrollChangeListener(null); web.setOnTouchListener(null);
