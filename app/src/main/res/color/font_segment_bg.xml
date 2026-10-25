@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Selected font segment: light blue fill (Material 3 segmented button). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/secondary_container" android:state_checked="true" />
+    <item android:color="@color/secondary_container" android:state_selected="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

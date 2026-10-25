@@ -27,11 +27,11 @@
     <string name="retry">Thử lại</string>
 
     <!-- Stitch Design System Strings -->
-    <string name="topic_history">🏛️ Lịch sử</string>
-    <string name="topic_places">🇻🇳 Địa danh</string>
-    <string name="topic_science">🔬 Khoa học</string>
-    <string name="topic_arts">🎨 Nghệ thuật</string>
-    <string name="topic_nature">🌱 Thiên nhiên</string>
+    <string name="topic_history">Lịch sử</string>
+    <string name="topic_places">Địa danh</string>
+    <string name="topic_science">Khoa học</string>
+    <string name="topic_arts">Nghệ thuật</string>
+    <string name="topic_nature">Thiên nhiên</string>
 
     <string name="featured_today">Chủ đề minh họa</string>
     <string name="updated_daily">Dữ liệu mẫu</string>
@@ -63,6 +63,13 @@
     <string name="card_3_time">5 phút đọc</string>
     <string name="card_3_snippet">Ngôi chùa cổ có kiến trúc độc đáo tựa như đóa sen nghìn năm tuổi vươn trên mặt hồ…</string>
 
+    <!-- Articles whose Wikipedia lead image illustrates each curated card. The featured article's
+         own lead image is a location map and the delta article has none, so related pages are used. -->
+    <string name="featured_image_source" translatable="false">Văn Miếu – Quốc Tử Giám (phường)</string>
+    <string name="card_1_image_source" translatable="false">Phố cổ Hội An</string>
+    <string name="card_2_image_source" translatable="false">Sông Cửu Long</string>
+    <string name="card_3_image_source" translatable="false">Chùa Một Cột</string>
+
     <!-- Reader Strings -->
     <string name="reader_default_title">Vịnh Hạ Long</string>
     <string name="action_listen">Nghe tóm tắt</string>
@@ -87,27 +94,36 @@
     <string name="history_write_error_message">Thay đổi lịch sử chưa được lưu. Hãy thử tải lại danh sách trước khi thực hiện lại thao tác.</string>
     <string name="history_remove_article">Xóa %1$s khỏi lịch sử</string>
     <string name="history_clear_all">Xóa tất cả</string>
+    <string name="history_rhythm_title">Nhịp đọc của bạn</string>
+    <string name="history_stat_today">Hôm nay</string>
+    <string name="history_stat_week">7 ngày qua</string>
+    <string name="history_stat_total">Tổng số bài</string>
+    <string name="history_section_today">Hôm nay</string>
+    <string name="history_section_yesterday">Hôm qua</string>
+    <string name="history_read_at">Đọc lúc %1$s</string>
 
     <!-- Settings Strings -->
-    <string name="settings_section_reading">TRẢI NGHIỆM ĐỌC BÀI</string>
+    <string name="settings_section_reading">Đọc bài</string>
     <string name="settings_font_size">Cỡ chữ bài viết</string>
     <string name="settings_font_badge">%1$s</string>
+    <string name="settings_font_size_value">%1$d sp</string>
+    <string name="settings_lang_value">Tiếng Việt</string>
     <string name="font_small">Nhỏ</string>
     <string name="font_normal">Chuẩn</string>
     <string name="font_large">Lớn</string>
     <string name="font_huge">Rất lớn</string>
-    <string name="preview_card_title">KHUNG XEM TRƯỚC TRỰC TIẾP</string>
+    <string name="preview_card_title">Xem trước</string>
     <string name="preview_card_headline">Di sản thiên nhiên thế giới</string>
     <string name="preview_card_quote">“Vịnh Hạ Long là một di sản thiên nhiên thế giới độc đáo với hàng nghìn hòn đảo đá vôi kỳ vĩ mang nhiều hình thù sinh động nổi bật trên làn nước màu xanh lục bảo.”</string>
     <string name="preview_card_sub">Kiểu chữ serif của hệ thống</string>
-    <string name="settings_section_lang">NGÔN NGỮ &amp; DỮ LIỆU</string>
+    <string name="settings_section_lang">Ngôn ngữ và dữ liệu</string>
     <string name="settings_lang">Ngôn ngữ hiển thị</string>
-    <string name="settings_lang_sub">Phiên bản đầu tiên chỉ hỗ trợ Wikipedia tiếng Việt</string>
+    <string name="settings_lang_sub">Hiện chỉ hỗ trợ Wikipedia tiếng Việt</string>
     <string name="settings_cache">Bộ nhớ tạm (Cache)</string>
-    <string name="settings_cache_sub">Chưa có bộ nhớ đệm bài viết hoặc tải ngoại tuyến</string>
+    <string name="settings_cache_sub">Ứng dụng chưa lưu bài để đọc ngoại tuyến</string>
     <string name="settings_cache_val">Chưa hỗ trợ</string>
     <string name="settings_cache_clear">Xóa cache</string>
-    <string name="settings_section_about">THÔNG TIN ỨNG DỤNG &amp; BẢN QUYỀN</string>
+    <string name="settings_section_about">Giới thiệu</string>
     <string name="settings_version">Phiên bản ứng dụng</string>
     <string name="settings_version_val">WikiRead v%1$s (Bản thử nghiệm môn học Android)</string>
     <string name="settings_team">Nhóm phát triển</string>
@@ -167,7 +183,7 @@
     <string name="ui_fragment_search_3">🏮</string>
     <string name="ui_fragment_search_4">🌾</string>
     <string name="ui_fragment_search_5">🌸</string>
-    <string name="ui_fragment_settings_1">Điều chỉnh kích thước hiển thị cho toàn bộ bài đọc.</string>
+    <string name="ui_fragment_settings_1">Áp dụng cho nội dung bài viết.</string>
     <string name="ui_fragment_settings_2">A\nNhỏ</string>
     <string name="ui_fragment_settings_3">A\nChuẩn</string>
     <string name="ui_fragment_settings_4">A\nLớn</string>

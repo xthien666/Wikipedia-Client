@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hero placeholder: deep navy with a soft glyph, matching the Stitch featured card. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="315" android:startColor="@color/primary_container"
+                android:endColor="@color/primary" />
+        </shape>
+    </item>
+    <item android:width="56dp" android:height="56dp" android:gravity="center"
+        android:drawable="@drawable/ic_book_muted" />
+</layer-list>

@@ -51,6 +51,9 @@ public final class MainActivity extends AppCompatActivity {
         navController.addOnDestinationChangedListener((controller, destination, args) -> {
             boolean isArticle = destination.getId() == R.id.articleFragment;
             binding.bottomNavigation.setVisibility(isArticle ? View.GONE : View.VISIBLE);
+            // Brand mark on tab roots (Stitch header); the reader shows the Up arrow instead.
+            binding.toolbar.setLogo(isArticle ? null
+                    : androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_brand_toolbar));
             applySystemInsets(binding);
             ViewCompat.requestApplyInsets(binding.getRoot());
         });

@@ -91,47 +91,26 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal" android:baselineAligned="false">
 
-                    <TextView android:focusable="true" android:clickable="true"
+                    <TextView
                         android:id="@+id/chip_fav_all"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                        android:background="@drawable/bg_pill_dark"
-                        android:gravity="center"
-                        android:paddingStart="14dp"
-                        android:paddingEnd="14dp"
+                        style="@style/Widget.WikiRead.TopicChip"
                         android:text="@string/bookmark_all"
-                        android:textColor="@color/on_primary"
-                        android:textSize="12sp"
                         android:textStyle="bold" />
 
-                    <TextView android:focusable="true" android:clickable="true"
+                    <!-- Category filters are disabled in code until categories exist; dim them. -->
+                    <TextView
                         android:id="@+id/chip_fav_places"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                    android:minHeight="48dp"
+                        style="@style/Widget.WikiRead.TopicChip"
                         android:layout_marginStart="8dp"
-                        android:background="@drawable/bg_pill_light"
-                        android:gravity="center"
-                        android:paddingStart="14dp"
-                        android:paddingEnd="14dp"
-                        android:text="@string/bookmark_places"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="12sp" />
+                        android:alpha="0.5"
+                        android:text="@string/bookmark_places" />
 
-                    <TextView android:focusable="true" android:clickable="true"
+                    <TextView
                         android:id="@+id/chip_fav_science"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                    android:minHeight="48dp"
+                        style="@style/Widget.WikiRead.TopicChip"
                         android:layout_marginStart="8dp"
-                        android:background="@drawable/bg_pill_light"
-                        android:gravity="center"
-                        android:paddingStart="14dp"
-                        android:paddingEnd="14dp"
-                        android:text="@string/bookmark_science"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="12sp" />
+                        android:alpha="0.5"
+                        android:text="@string/bookmark_science" />
                 </LinearLayout>
             </HorizontalScrollView>
 

@@ -30,6 +30,8 @@ public final class AppContainer {
             com.example.wikipediaclient.data.repository.ArticleRepository articleRepository) {
         this.articleRepository = articleRepository;
         this.searchRepository = searchRepository;
+        // Injected repositories mean a deterministic test container: never load images from the network.
+        this.networkImages = searchRepository == null && articleRepository == null;
         applicationContext = context.getApplicationContext();
         readerSettings = new com.example.wikipediaclient.data.local.ReaderSettings(applicationContext);
         WikiDatabaseHelper database = new WikiDatabaseHelper(applicationContext);
@@ -40,6 +42,17 @@ public final class AppContainer {
     public synchronized RequestQueue getRequestQueue() {
         if (requestQueue == null) requestQueue = Volley.newRequestQueue(applicationContext);
         return requestQueue;
+    }
+    private final boolean networkImages;
+    private com.example.wikipediaclient.ui.common.WikiThumbnails thumbnails;
+    /** Shared lead-image loader for cards and lists; a no-op for injected test containers. */
+    public synchronized com.example.wikipediaclient.ui.common.WikiThumbnails getThumbnails() {
+        if (thumbnails == null) {
+            thumbnails = networkImages
+                    ? new com.example.wikipediaclient.ui.common.WikiThumbnails(getRequestQueue())
+                    : com.example.wikipediaclient.ui.common.WikiThumbnails.disabled();
+        }
+        return thumbnails;
     }
     private com.example.wikipediaclient.data.remote.WikipediaApi wikipediaApi;
     private com.example.wikipediaclient.data.repository.SearchRepository searchRepository;

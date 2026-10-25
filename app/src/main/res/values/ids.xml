@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- View tags used by WikiThumbnails to discard stale results on recycled rows. -->
+    <item name="thumbnail_title" type="id" />
+    <item name="thumbnail_request" type="id" />
+</resources>

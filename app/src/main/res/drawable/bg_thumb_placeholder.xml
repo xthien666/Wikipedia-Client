@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shown behind thumbnails until (or instead of) a Wikipedia lead image. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surface_container" />
+        </shape>
+    </item>
+    <item android:width="28dp" android:height="28dp" android:gravity="center"
+        android:drawable="@drawable/ic_book_muted" />
+</layer-list>

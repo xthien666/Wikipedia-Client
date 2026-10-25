@@ -31,7 +31,7 @@ public final class HistoryFragment extends Fragment {
             @Override public void remove(com.example.wikipediaclient.data.model.HistoryEntry entry) {
                 model.remove(entry);
             }
-        });
+        }, ((WikiApplication) requireActivity().getApplication()).getContainer().getThumbnails());
         binding.historyList.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.historyList.setAdapter(adapter);
         getChildFragmentManager().setFragmentResultListener(ClearHistoryDialogFragment.CONFIRMED,
@@ -52,6 +52,7 @@ public final class HistoryFragment extends Fragment {
         binding.btnClearHistory.setEnabled(count > 0 || state.getKind() == HistoryState.Kind.ERROR);
         binding.historyList.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
         adapter.submit(state.getEntries());
+        renderRhythm(state.getEntries());
         if (state.getKind() == HistoryState.Kind.LOADING) {
             binding.status.showLoading(R.string.history_loading);
         } else if (state.getKind() == HistoryState.Kind.ERROR) {
@@ -65,6 +66,21 @@ public final class HistoryFragment extends Fragment {
         } else {
             binding.status.setVisibility(View.GONE);
         }
+    }
+
+    /** Counts distinct articles read today and in the last 7 days; hides the card when empty. */
+    private void renderRhythm(java.util.List<com.example.wikipediaclient.data.model.HistoryEntry> entries) {
+        binding.cardReadingRhythm.setVisibility(entries.isEmpty() ? View.GONE : View.VISIBLE);
+        long today = HistoryAdapter.startOfDay(System.currentTimeMillis());
+        long weekStart = today - 6L * 24 * 60 * 60 * 1000;
+        int todayCount = 0, weekCount = 0;
+        for (com.example.wikipediaclient.data.model.HistoryEntry entry : entries) {
+            if (entry.getLastReadAt() >= today) todayCount++;
+            if (entry.getLastReadAt() >= weekStart) weekCount++;
+        }
+        binding.tvStatToday.setText(String.valueOf(todayCount));
+        binding.tvStatWeek.setText(String.valueOf(weekCount));
+        binding.tvStatTotal.setText(String.valueOf(entries.size()));
     }
 
     @Override public void onDestroyView() {

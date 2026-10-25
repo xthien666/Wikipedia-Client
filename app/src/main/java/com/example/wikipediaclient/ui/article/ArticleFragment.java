@@ -136,6 +136,7 @@ public final class ArticleFragment extends Fragment {
         }
         binding.bookmarkRetry.setVisibility(state.bookmarkError && displayed ? View.VISIBLE : View.GONE);
         binding.actionSave.setText(state.bookmarked ? R.string.reader_bookmark_remove : R.string.reader_bookmark_add);
+        binding.actionSave.setIconResource(state.bookmarked ? R.drawable.ic_bookmark_filled : R.drawable.ic_bookmark);
         binding.actionSave.setEnabled(displayed && state.bookmarkReady);
         sourceActions.bind(rendered, displayed);
     }

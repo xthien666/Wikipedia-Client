@@ -34,7 +34,7 @@ public final class LibraryFragment extends Fragment implements BookmarkAdapter.L
         AppContainer container = ((WikiApplication) requireActivity().getApplication()).getContainer();
         model = new ViewModelProvider(this, LibraryViewModel.factory(
                 container.getBookmarkRepository(), container.getDiskExecutor())).get(LibraryViewModel.class);
-        adapter = new BookmarkAdapter(this);
+        adapter = new BookmarkAdapter(this, container.getThumbnails());
         adapter.setStateRestorationPolicy(BookmarkAdapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY);
         binding.bookmarkList.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.bookmarkList.setAdapter(adapter);

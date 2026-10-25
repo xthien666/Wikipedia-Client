@@ -9,31 +9,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingBottom="48dp">
+        android:paddingBottom="32dp">
 
-        <!-- SECTION 1: TRẢI NGHIỆM ĐỌC BÀI -->
+        <!-- SECTION 1: Đọc bài -->
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/page_gutter"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="@dimen/page_gutter"
-            android:text="@string/settings_section_reading"
-            android:textColor="@color/secondary"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            style="@style/Widget.WikiRead.SettingsHeader"
+            android:text="@string/settings_section_reading" />
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/page_gutter"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="@dimen/page_gutter"
-            app:cardBackgroundColor="@color/surface_container_lowest"
-            app:cardCornerRadius="@dimen/card_radius"
-            app:cardElevation="0.5dp"
-            app:strokeColor="@color/card_stroke"
-            app:strokeWidth="1dp">
+        <com.google.android.material.card.MaterialCardView style="@style/Widget.WikiRead.SettingsGroup">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -44,245 +27,113 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal" android:baselineAligned="false">
+                    android:baselineAligned="true"
+                    android:orientation="horizontal">
 
                     <TextView
+                        style="@style/Widget.WikiRead.SettingsTitle"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/settings_font_size"
-                        android:textColor="@color/primary"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:text="@string/settings_font_size" />
 
                     <TextView
                         android:id="@+id/tv_font_badge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_badge_secondary"
-                        android:paddingStart="8dp"
-                        android:paddingTop="2dp"
-                        android:paddingEnd="8dp"
-                        android:paddingBottom="2dp"
-                        android:text="@string/settings_font_badge"
-                        android:textColor="@color/secondary"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
+                        style="@style/Widget.WikiRead.SettingsValue"
+                        android:text="@string/settings_font_badge" />
                 </LinearLayout>
 
                 <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/ui_fragment_settings_1"
-                    android:textColor="@color/on_surface_variant"
-                    android:textSize="12sp" />
+                    style="@style/Widget.WikiRead.SettingsSummary"
+                    android:text="@string/ui_fragment_settings_1" />
 
-                <!-- Font Size Segmented Options -->
-                <LinearLayout
+                <!-- Standard Material 3 segmented buttons; selection is also mirrored via isSelected(). -->
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/font_size_group"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:baselineAligned="false"
                     android:layout_marginTop="14dp"
-                    android:background="@drawable/bg_search_bar"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:padding="3dp">
+                    app:selectionRequired="true"
+                    app:singleSelection="true">
 
-                    <TextView android:focusable="true" android:clickable="true"
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_font_small"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:minHeight="48dp"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="@string/ui_fragment_settings_2"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="12sp" />
-
-                    <TextView android:focusable="true" android:clickable="true"
-                        android:id="@+id/btn_font_normal"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:minHeight="48dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_pill_dark"
-                        android:gravity="center"
-                        android:text="@string/ui_fragment_settings_3"
-                        android:textColor="@color/on_primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <TextView android:focusable="true" android:clickable="true"
-                        android:id="@+id/btn_font_large"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:minHeight="48dp"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="@string/ui_fragment_settings_4"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="12sp" />
-
-                    <TextView android:focusable="true" android:clickable="true"
-                        android:id="@+id/btn_font_huge"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:minHeight="48dp"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="@string/ui_fragment_settings_5"
-                        android:textColor="@color/on_surface_variant"
+                        style="@style/Widget.WikiRead.FontSegment"
+                        android:text="@string/font_small"
                         android:textSize="13sp" />
-                </LinearLayout>
 
-                <!-- Live Preview Card (Stitch design) -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    app:cardBackgroundColor="@color/surface_container_low"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="@color/divider"
-                    app:strokeWidth="1dp">
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_font_normal"
+                        style="@style/Widget.WikiRead.FontSegment"
+                        android:text="@string/font_normal"
+                        android:textSize="14sp" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="14dp">
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_font_large"
+                        style="@style/Widget.WikiRead.FontSegment"
+                        android:text="@string/font_large"
+                        android:textSize="15sp" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/preview_card_title"
-                            android:textColor="@color/secondary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_font_huge"
+                        style="@style/Widget.WikiRead.FontSegment"
+                        android:text="@string/font_huge"
+                        android:textSize="16sp" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
 
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:fontFamily="serif"
-                            android:text="@string/preview_card_headline"
-                            android:textColor="@color/primary"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tv_preview_body"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:fontFamily="serif"
-                            android:lineSpacingExtra="4dp"
-                            android:text="@string/preview_card_quote"
-                            android:textColor="@color/on_surface"
-                            android:textSize="16sp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="@string/preview_card_sub"
-                            android:textColor="@color/on_surface_variant"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- SECTION 2: NGÔN NGỮ & DỮ LIỆU -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/page_gutter"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="@dimen/page_gutter"
-            android:text="@string/settings_section_lang"
-            android:textColor="@color/secondary"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/page_gutter"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="@dimen/page_gutter"
-            app:cardBackgroundColor="@color/surface_container_lowest"
-            app:cardCornerRadius="@dimen/card_radius"
-            app:cardElevation="0.5dp"
-            app:strokeColor="@color/card_stroke"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <!-- Language row -->
+                <!-- Live preview -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal" android:baselineAligned="false">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_lang"
-                            android:textColor="@color/primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/settings_lang_sub"
-                            android:textColor="@color/on_surface_variant"
-                            android:textSize="12sp" />
-                    </LinearLayout>
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_preview"
+                    android:orientation="vertical"
+                    android:padding="14dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/bg_badge_secondary"
-                        android:paddingStart="10dp"
-                        android:paddingTop="4dp"
-                        android:paddingEnd="10dp"
-                        android:paddingBottom="4dp"
-                        android:text="@string/ui_fragment_settings_6"
-                        android:textColor="@color/secondary"
-                        android:textSize="12sp"
+                        android:text="@string/preview_card_title"
+                        android:textColor="@color/outline"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="serif"
+                        android:text="@string/preview_card_headline"
+                        android:textColor="@color/primary"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_preview_body"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="serif"
+                        android:lineSpacingExtra="4dp"
+                        android:text="@string/preview_card_quote"
+                        android:textColor="@color/on_surface"
+                        android:textSize="16sp" />
                 </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginBottom="12dp"
-                    android:background="@color/divider" />
+        <!-- SECTION 2: Ngôn ngữ và dữ liệu -->
+        <TextView
+            style="@style/Widget.WikiRead.SettingsHeader"
+            android:text="@string/settings_section_lang" />
 
-                <!-- Cache storage row -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal" android:baselineAligned="false">
+        <com.google.android.material.card.MaterialCardView style="@style/Widget.WikiRead.SettingsGroup">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Language row -->
+                <LinearLayout style="@style/Widget.WikiRead.SettingsRow">
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -290,204 +141,119 @@
                         android:layout_weight="1"
                         android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_cache"
-                            android:textColor="@color/primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                        <TextView style="@style/Widget.WikiRead.SettingsTitle" android:text="@string/settings_lang" />
+                        <TextView style="@style/Widget.WikiRead.SettingsSummary" android:text="@string/settings_lang_sub" />
+                    </LinearLayout>
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/settings_cache_sub"
-                            android:textColor="@color/on_surface_variant"
-                            android:textSize="12sp" />
+                    <TextView
+                        style="@style/Widget.WikiRead.SettingsValue"
+                        android:layout_marginStart="16dp"
+                        android:text="@string/settings_lang_value" />
+                </LinearLayout>
+
+                <View style="@style/Widget.WikiRead.SettingsDivider" />
+
+                <!-- Cache row -->
+                <LinearLayout
+                    style="@style/Widget.WikiRead.SettingsRow"
+                    android:paddingEnd="8dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView style="@style/Widget.WikiRead.SettingsTitle" android:text="@string/settings_cache" />
+                        <TextView style="@style/Widget.WikiRead.SettingsSummary" android:text="@string/settings_cache_sub" />
                     </LinearLayout>
 
                     <TextView
                         android:id="@+id/tv_cache_val"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="10dp"
-                        android:text="@string/settings_cache_val"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="12sp" />
+                        style="@style/Widget.WikiRead.SettingsValue"
+                        android:text="@string/settings_cache_val" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_clear_cache"
-                        style="@style/Widget.Material3.Button.TonalButton"
+                        style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:text="@string/settings_cache_clear"
-                        android:textSize="12sp" />
+                        android:layout_marginStart="8dp"
+                        android:minHeight="48dp"
+                        android:text="@string/settings_cache_clear" />
                 </LinearLayout>
-
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- SECTION 3: THÔNG TIN ỨNG DỤNG & BẢN QUYỀN -->
+        <!-- SECTION 3: Giới thiệu -->
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/page_gutter"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="@dimen/page_gutter"
-            android:text="@string/settings_section_about"
-            android:textColor="@color/secondary"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            style="@style/Widget.WikiRead.SettingsHeader"
+            android:text="@string/settings_section_about" />
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/page_gutter"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="@dimen/page_gutter"
-            app:cardBackgroundColor="@color/surface_container_lowest"
-            app:cardCornerRadius="@dimen/card_radius"
-            app:cardElevation="0.5dp"
-            app:strokeColor="@color/card_stroke"
-            app:strokeWidth="1dp">
+        <com.google.android.material.card.MaterialCardView style="@style/Widget.WikiRead.SettingsGroup">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="vertical">
 
-                <!-- Version -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_version"
-                    android:textColor="@color/primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                <LinearLayout style="@style/Widget.WikiRead.SettingsBlock">
+                    <TextView style="@style/Widget.WikiRead.SettingsTitle" android:text="@string/settings_version" />
+                    <TextView android:id="@+id/tv_version" style="@style/Widget.WikiRead.SettingsSummary" android:text="@string/app_name" />
+                </LinearLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:id="@+id/tv_version"
-                    android:text="@string/app_name"
-                    android:textColor="@color/on_surface_variant"
-                    android:textSize="12sp" />
+                <View style="@style/Widget.WikiRead.SettingsDivider" />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginBottom="10dp"
-                    android:background="@color/divider" />
+                <LinearLayout style="@style/Widget.WikiRead.SettingsBlock">
+                    <TextView style="@style/Widget.WikiRead.SettingsTitle" android:text="@string/settings_team" />
+                    <TextView android:id="@+id/tv_team_details" style="@style/Widget.WikiRead.SettingsSummary" android:text="@string/settings_team_val" />
+                </LinearLayout>
 
-                <!-- Team -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_team"
-                    android:textColor="@color/primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                <View style="@style/Widget.WikiRead.SettingsDivider" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/settings_team_val"
-                    android:id="@+id/tv_team_details"
-                    android:textColor="@color/on_surface_variant"
-                    android:textSize="12sp" />
+                <LinearLayout style="@style/Widget.WikiRead.SettingsBlock">
+                    <TextView style="@style/Widget.WikiRead.SettingsTitle" android:text="@string/settings_license" />
+                    <TextView style="@style/Widget.WikiRead.SettingsSummary" android:text="@string/settings_license_val" />
+                </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginBottom="10dp"
-                    android:background="@color/divider" />
+                <View style="@style/Widget.WikiRead.SettingsDivider" />
 
-                <!-- Source -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_source"
-                    android:textColor="@color/primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                <LinearLayout style="@style/Widget.WikiRead.SettingsBlock">
+                    <TextView style="@style/Widget.WikiRead.SettingsTitle" android:text="@string/about_app_license_title" />
+                    <TextView android:id="@+id/tv_app_license" style="@style/Widget.WikiRead.SettingsSummary" android:text="@string/about_app_license_value" />
+                </LinearLayout>
 
+                <View style="@style/Widget.WikiRead.SettingsDivider" />
+
+                <!-- External links: plain left-aligned rows with an "open" glyph. -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_about_source"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/settings_source_val"
-                    android:textColor="@color/secondary"
-                    android:textSize="12sp" />
+                    style="@style/Widget.WikiRead.SettingsLink"
+                    android:text="@string/settings_source_val" />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginBottom="10dp"
-                    android:background="@color/divider" />
-
-                <!-- License -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_license"
-                    android:textColor="@color/primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/settings_license_val"
-                    android:textColor="@color/on_surface_variant"
-                    android:textSize="12sp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_about_terms"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:minHeight="48dp" android:text="@string/about_terms" />
-                <TextView
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp" android:text="@string/about_app_license_title"
-                    android:textSize="13sp" android:textStyle="bold" android:textColor="@color/primary" />
-                <TextView
-                    android:id="@+id/tv_app_license"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp" android:text="@string/about_app_license_value"
-                    android:textSize="12sp" android:textColor="@color/on_surface_variant" />
+                    style="@style/Widget.WikiRead.SettingsLink"
+                    android:text="@string/about_terms" />
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_about_project"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:minHeight="48dp" android:text="@string/about_project" />
+                    style="@style/Widget.WikiRead.SettingsLink"
+                    android:layout_marginBottom="4dp"
+                    android:text="@string/about_project" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Footer Academic Disclaimer -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/page_gutter"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="@dimen/page_gutter"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
             android:gravity="center"
             android:lineSpacingExtra="2dp"
             android:text="@string/settings_disclaimer"
-            android:textColor="@color/on_surface_variant"
+            android:textColor="@color/outline"
             android:textSize="12sp" />
-
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

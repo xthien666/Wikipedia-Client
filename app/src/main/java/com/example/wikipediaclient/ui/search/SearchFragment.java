@@ -19,6 +19,7 @@ import com.example.wikipediaclient.WikiApplication;
 import com.example.wikipediaclient.data.model.ArticleLocator;
 import com.example.wikipediaclient.data.remote.WikiApiException;
 import com.example.wikipediaclient.databinding.FragmentSearchBinding;
+import com.example.wikipediaclient.ui.common.WikiThumbnails;
 import com.example.wikipediaclient.ui.navigation.ArticleNavigator;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -44,10 +45,12 @@ public final class SearchFragment extends Fragment {
         setUpResults();
 
         binding.queryInput.setText(model.getQuery());
+        syncQueryControls(model.getQuery());
         watcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 model.setQuery(s.toString());
+                syncQueryControls(s.toString());
             }
             @Override public void afterTextChanged(Editable editable) {}
         };
@@ -75,25 +78,14 @@ public final class SearchFragment extends Fragment {
         binding.btnVoiceSearch.setOnClickListener(v ->
                 Toast.makeText(requireContext(), R.string.voice_search_pending, Toast.LENGTH_SHORT).show());
 
-        // Topic chips click
-        View.OnClickListener chipListener = v -> {
-            if (v.getId() == R.id.chip_history) {
-                binding.queryInput.setText(R.string.query_history);
-            } else if (v.getId() == R.id.chip_places) {
-                binding.queryInput.setText(R.string.query_places);
-            } else if (v.getId() == R.id.chip_science) {
-                binding.queryInput.setText(R.string.query_science);
-            } else if (v.getId() == R.id.chip_arts) {
-                binding.queryInput.setText(R.string.query_arts);
-            } else if (v.getId() == R.id.chip_nature) {
-                binding.queryInput.setText(R.string.query_nature);
-            }
-        };
-        binding.chipHistory.setOnClickListener(chipListener);
-        binding.chipPlaces.setOnClickListener(chipListener);
-        binding.chipScience.setOnClickListener(chipListener);
-        binding.chipArts.setOnClickListener(chipListener);
-        binding.chipNature.setOnClickListener(chipListener);
+        // Topic chips fill the query; the matching chip is shown as selected.
+        for (int i = 0; i < chips().length; i++) {
+            final int query = CHIP_QUERIES[i];
+            chips()[i].setOnClickListener(v -> {
+                binding.queryInput.setText(query);
+                binding.queryInput.setSelection(binding.queryInput.length());
+            });
+        }
 
         // Featured card and sample button
         binding.openSample.setOnClickListener(v -> ArticleNavigator.open(
@@ -109,12 +101,40 @@ public final class SearchFragment extends Fragment {
         binding.cardArticle3.setOnClickListener(v -> ArticleNavigator.open(
                 this, new ArticleLocator("vi", getString(R.string.card_3_title), null)));
 
+        // Real lead images for the curated cards (one batched request).
+        WikiThumbnails thumbnails = app.getContainer().getThumbnails();
+        thumbnails.load(getString(R.string.featured_image_source), binding.imgFeatured);
+        thumbnails.load(getString(R.string.card_1_image_source), binding.imgArticle1);
+        thumbnails.load(getString(R.string.card_2_image_source), binding.imgArticle2);
+        thumbnails.load(getString(R.string.card_3_image_source), binding.imgArticle3);
+
         model.getState().observe(getViewLifecycleOwner(), this::render);
     }
 
+    private static final int[] CHIP_QUERIES = {R.string.query_history, R.string.query_places,
+            R.string.query_science, R.string.query_arts, R.string.query_nature};
+
+    private View[] chips() {
+        return new View[]{binding.chipHistory, binding.chipPlaces, binding.chipScience,
+                binding.chipArts, binding.chipNature};
+    }
+
+    /** Shows the clear button only when there is text and highlights the chip matching the query. */
+    private void syncQueryControls(@Nullable String query) {
+        if (binding == null) return;
+        String text = query == null ? "" : query.trim();
+        binding.btnClearSearch.setVisibility(text.isEmpty() ? View.GONE : View.VISIBLE);
+        View[] chips = chips();
+        for (int i = 0; i < chips.length; i++) {
+            chips[i].setSelected(text.equalsIgnoreCase(getString(CHIP_QUERIES[i])));
+        }
+    }
+
     private void setUpResults() {
+        WikiApplication app = (WikiApplication) requireContext().getApplicationContext();
         adapter = new SearchResultAdapter(result -> ArticleNavigator.open(
-                this, new ArticleLocator("vi", result.getTitle(), result.getPageId())));
+                this, new ArticleLocator("vi", result.getTitle(), result.getPageId())),
+                app.getContainer().getThumbnails());
         LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
         binding.searchResults.setLayoutManager(layoutManager);
         binding.searchResults.setAdapter(adapter);
@@ -188,6 +208,16 @@ public final class SearchFragment extends Fragment {
         if (binding != null && watcher != null) {
             binding.queryInput.removeTextChangedListener(watcher);
         }
+        if (binding != null) {
+            WikiThumbnails thumbnails = ((WikiApplication) requireActivity().getApplication())
+                    .getContainer().getThumbnails();
+            thumbnails.cancel(binding.imgFeatured);
+            thumbnails.cancel(binding.imgArticle1);
+            thumbnails.cancel(binding.imgArticle2);
+            thumbnails.cancel(binding.imgArticle3);
+            binding.searchResults.setAdapter(null);
+        }
+        adapter = null;
         watcher = null;
         binding = null;
         super.onDestroyView();

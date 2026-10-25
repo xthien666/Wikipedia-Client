@@ -5,7 +5,6 @@ import android.view.View;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import com.example.wikipediaclient.BuildConfig;
@@ -38,21 +37,14 @@ public final class SettingsFragment extends Fragment {
     private void selectFont(int size) { settings.setFontSize(size); render(size); }
     private void render(int size) {
         binding.tvPreviewBody.setTextSize(size);
-        int label = switch (size) {
-            case 14 -> R.string.font_small;
-            case 18 -> R.string.font_large;
-            case 22 -> R.string.font_huge;
-            default -> R.string.font_normal;
-        };
-        binding.tvFontBadge.setText(getString(R.string.settings_font_badge, getString(label)));
+        binding.tvFontBadge.setText(getString(R.string.settings_font_size_value, size));
         TextView[] options = {binding.btnFontSmall, binding.btnFontNormal, binding.btnFontLarge, binding.btnFontHuge};
         int[] sizes = {14, 16, 18, 22};
         for (int index = 0; index < options.length; index++) {
             TextView option = options[index];
             boolean selected = size == sizes[index];
             option.setSelected(selected);
-            option.setBackgroundResource(selected ? R.drawable.bg_pill_dark : R.drawable.bg_pill_light);
-            option.setTextColor(ContextCompat.getColor(requireContext(), selected ? R.color.on_primary : R.color.on_surface_variant));
+            if (selected) binding.fontSizeGroup.check(option.getId());
             ViewCompat.setStateDescription(option, getString(selected ? R.string.option_selected : R.string.option_not_selected));
             option.setContentDescription(getString(R.string.font_option_accessible, getString(switch (sizes[index]) {
                 case 14 -> R.string.font_small;

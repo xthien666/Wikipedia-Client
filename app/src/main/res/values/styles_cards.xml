@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reusable card/list styles for the Stitch-based Explore, Favorites and History screens. -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Widget.WikiRead.TopicChip" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:background">@drawable/bg_topic_chip</item>
+        <item name="android:textColor">@color/topic_chip_text</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="Widget.WikiRead.SuggestionCard" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">@dimen/page_gutter</item>
+        <item name="android:layout_marginEnd">@dimen/page_gutter</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="cardBackgroundColor">@color/surface_container_lowest</item>
+        <item name="cardCornerRadius">@dimen/card_radius</item>
+        <item name="cardElevation">0.5dp</item>
+        <item name="strokeColor">@color/card_stroke</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <style name="Widget.WikiRead.SuggestionRow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:baselineAligned">false</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:padding">12dp</item>
+    </style>
+
+    <!-- Rounded clip for list thumbnails. -->
+    <style name="Widget.WikiRead.Thumb" parent="">
+        <item name="android:layout_width">@dimen/thumb_size</item>
+        <item name="android:layout_height">@dimen/thumb_size</item>
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="cardBackgroundColor">@color/surface_container</item>
+    </style>
+
+    <style name="Widget.WikiRead.ThumbImage" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">@drawable/bg_thumb_placeholder</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="android:scaleType">centerCrop</item>
+    </style>
+
+    <style name="Widget.WikiRead.SuggestionText" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">14dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="Widget.WikiRead.ReadTime" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/outline</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
+    <style name="Widget.WikiRead.SuggestionTitle" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:fontFamily">serif</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Widget.WikiRead.SuggestionSnippet" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:lineSpacingExtra">1dp</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="Widget.WikiRead.HistoryStat" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="Widget.WikiRead.HistoryStatValue" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">serif</item>
+        <item name="android:textColor">@color/on_primary</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Widget.WikiRead.HistoryStatLabel" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:textColor">@color/on_primary_container</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="Widget.WikiRead.HistoryStatDivider" parent="">
+        <item name="android:layout_width">1dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_marginStart">12dp</item>
+        <item name="android:layout_marginEnd">12dp</item>
+        <item name="android:background">#33FFFFFF</item>
+    </style>
+
+    <!-- Settings: sentence-case group header, like system Settings. -->
+    <style name="Widget.WikiRead.SettingsHeader" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">32dp</item>
+        <item name="android:layout_marginTop">24dp</item>
+        <item name="android:layout_marginEnd">32dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:textColor">@color/secondary</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:accessibilityHeading" tools:targetApi="28">true</item>
+    </style>
+
+    <style name="Widget.WikiRead.SettingsGroup" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">@dimen/page_gutter</item>
+        <item name="android:layout_marginEnd">@dimen/page_gutter</item>
+        <item name="cardBackgroundColor">@color/surface_container_lowest</item>
+        <item name="cardCornerRadius">20dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+
+    <style name="Widget.WikiRead.SettingsRow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">72dp</item>
+        <item name="android:baselineAligned">false</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+
+    <style name="Widget.WikiRead.SettingsBlock" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingBottom">14dp</item>
+    </style>
+
+    <style name="Widget.WikiRead.SettingsTitle" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/on_surface</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="Widget.WikiRead.SettingsSummary" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <!-- Current value shown at the end of a row (no pill, no glyph). -->
+    <style name="Widget.WikiRead.SettingsValue" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="Widget.WikiRead.SettingsDivider" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:background">@color/divider</item>
+    </style>
+
+    <style name="Widget.WikiRead.SettingsLink" parent="Widget.Material3.Button.TextButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:textColor">@color/secondary</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="cornerRadius">0dp</item>
+        <item name="icon">@drawable/ic_open_in_new</item>
+        <item name="iconGravity">end</item>
+        <item name="iconSize">18dp</item>
+        <item name="iconTint">@color/outline</item>
+    </style>
+
+    <!-- One segment of the font-size MaterialButtonToggleGroup. -->
+    <style name="Widget.WikiRead.FontSegment" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textColor">@color/font_segment_text</item>
+        <item name="backgroundTint">@color/font_segment_bg</item>
+        <item name="strokeColor">@color/outline_variant</item>
+    </style>
+</resources>

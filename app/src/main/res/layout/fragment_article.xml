@@ -1,38 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
-    <TextView android:id="@+id/article_title" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:paddingStart="@dimen/page_gutter"
-        android:paddingEnd="@dimen/page_gutter" android:paddingTop="12dp" android:paddingBottom="8dp"
-        android:fontFamily="serif" android:textColor="@color/primary" android:textSize="26sp"
-        android:maxLines="3" android:ellipsize="end" android:textStyle="bold" />
-    <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:scrollbars="none">
-        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:paddingStart="@dimen/page_gutter" android:paddingEnd="@dimen/page_gutter" android:orientation="horizontal">
-            <com.google.android.material.button.MaterialButton android:id="@+id/action_save"
-                style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/reader_bookmark_add" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/action_share"
-                style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:layout_marginStart="8dp" android:minHeight="48dp"
-                android:text="@string/reader_share_link" android:contentDescription="@string/share_article" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/btn_view_original"
-                style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/reader_source" android:contentDescription="@string/reader_view_original" />
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- Editorial header (Stitch reader): source overline, serif title, quick-action pills. -->
+    <TextView
+        android:id="@+id/article_source"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/page_gutter"
+        android:layout_marginTop="4dp"
+        android:background="@drawable/bg_badge_secondary"
+        android:paddingStart="10dp"
+        android:paddingTop="3dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="3dp"
+        android:text="@string/bookmark_source"
+        android:textAppearance="@style/TextAppearance.WikiRead.Overline" />
+
+    <TextView
+        android:id="@+id/article_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:fontFamily="serif"
+        android:lineSpacingExtra="2dp"
+        android:maxLines="3"
+        android:paddingStart="@dimen/page_gutter"
+        android:paddingTop="8dp"
+        android:paddingEnd="@dimen/page_gutter"
+        android:paddingBottom="6dp"
+        android:textColor="@color/primary"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:paddingStart="@dimen/page_gutter"
+        android:paddingEnd="@dimen/page_gutter"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/action_save"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="16dp"
+                android:text="@string/reader_bookmark_add"
+                android:textSize="13sp"
+                app:icon="@drawable/ic_bookmark"
+                app:iconPadding="6dp"
+                app:iconSize="18dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/action_share"
+                style="@style/Widget.WikiRead.ReaderAction"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/share_article"
+                android:text="@string/reader_share_link"
+                app:icon="@drawable/ic_share" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_view_original"
+                style="@style/Widget.WikiRead.ReaderAction"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/reader_view_original"
+                android:text="@string/reader_source"
+                app:icon="@drawable/ic_open_in_new" />
         </LinearLayout>
     </HorizontalScrollView>
-    <com.google.android.material.button.MaterialButton android:id="@+id/bookmark_retry"
-        style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:minHeight="48dp" android:visibility="gone"
-        android:text="@string/reader_bookmark_retry" />
-    <com.example.wikipediaclient.ui.common.StatusView android:id="@+id/status"
-        android:layout_width="match_parent" android:layout_height="wrap_content" />
-    <WebView android:id="@+id/article_body" android:layout_width="match_parent"
-        android:layout_height="0dp" android:layout_weight="1" android:saveEnabled="false"
-        android:contentDescription="@string/reader_content_description" />
-    <TextView android:id="@+id/article_license" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:minHeight="48dp" android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground" android:paddingStart="@dimen/page_gutter"
-        android:paddingEnd="@dimen/page_gutter" android:paddingTop="8dp" android:paddingBottom="8dp"
-        android:textColor="@color/on_surface_variant" android:textSize="12sp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/bookmark_retry"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:text="@string/reader_bookmark_retry"
+        android:textColor="@color/error"
+        android:visibility="gone" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/divider" />
+
+    <com.example.wikipediaclient.ui.common.StatusView
+        android:id="@+id/status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <WebView
+        android:id="@+id/article_body"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:contentDescription="@string/reader_content_description"
+        android:saveEnabled="false" />
+
+    <TextView
+        android:id="@+id/article_license"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface_container_low"
+        android:drawablePadding="8dp"
+        android:gravity="center_vertical"
+        android:minHeight="48dp"
+        android:paddingStart="@dimen/page_gutter"
+        android:paddingTop="8dp"
+        android:paddingEnd="@dimen/page_gutter"
+        android:paddingBottom="8dp"
+        android:textColor="@color/on_surface_variant"
+        android:textSize="12sp"
+        app:drawableStartCompat="@drawable/ic_shield"
+        app:drawableTint="@color/outline" />
 </LinearLayout>

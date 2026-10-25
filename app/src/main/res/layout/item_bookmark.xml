@@ -6,10 +6,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="@dimen/page_gutter"
-    android:layout_marginTop="16dp"
+    android:layout_marginTop="14dp"
     android:layout_marginEnd="@dimen/page_gutter"
+    android:clickable="true"
+    android:focusable="true"
     app:cardBackgroundColor="@color/surface_container_lowest"
-    app:cardCornerRadius="@dimen/card_radius"
+    app:cardCornerRadius="@dimen/card_radius_large"
     app:cardElevation="1dp"
     app:strokeColor="@color/card_stroke"
     app:strokeWidth="1dp">
@@ -19,29 +21,36 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Cover: the article's Wikipedia lead image, or a navy placeholder. -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:background="@color/primary_container">
+            android:layout_height="148dp">
+
+            <ImageView
+                android:id="@+id/bookmark_cover"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_hero_placeholder"
+                android:importantForAccessibility="no"
+                android:scaleType="centerCrop" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/bg_scrim_bottom" />
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/bookmark_cover"
-                android:textSize="42sp" />
-
-            <TextView
+                android:id="@+id/bookmark_date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|start"
-                android:layout_margin="10dp"
+                android:layout_margin="12dp"
                 android:background="@drawable/bg_pill_dark"
-                android:paddingStart="8dp"
-                android:paddingTop="2dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="2dp"
-                android:id="@+id/bookmark_date"
+                android:paddingStart="10dp"
+                android:paddingTop="3dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="3dp"
                 android:textColor="@color/on_primary"
                 android:textSize="12sp" />
         </FrameLayout>
@@ -50,68 +59,86 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="14dp">
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="8dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal" android:baselineAligned="false">
+                android:layout_marginEnd="8dp"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
+                    android:id="@+id/bookmark_source"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:id="@+id/bookmark_source"
-                    android:textColor="@color/secondary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                    android:textAppearance="@style/TextAppearance.WikiRead.Overline" />
 
                 <TextView
+                    android:id="@+id/bookmark_availability"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/bookmark_availability"
-                    android:textColor="@color/on_surface_variant"
-                    android:textSize="12sp" />
+                    android:background="@drawable/bg_badge_secondary"
+                    android:paddingStart="8dp"
+                    android:paddingTop="2dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="2dp"
+                    android:textColor="@color/secondary"
+                    android:textSize="11sp" />
             </LinearLayout>
 
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:fontFamily="serif"
                 android:id="@+id/bookmark_title"
-                android:textColor="@color/primary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
                 android:ellipsize="end"
+                android:fontFamily="serif"
                 android:maxLines="2"
+                android:textColor="@color/primary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
                 android:id="@+id/bookmark_url"
-                android:textColor="@color/on_surface_variant"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:ellipsize="middle"
+                android:singleLine="true"
+                android:textColor="@color/outline"
                 android:textSize="12sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
+                android:baselineAligned="false"
                 android:gravity="center_vertical"
-                android:orientation="horizontal" android:baselineAligned="false">
+                android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/bookmark_open"
+                    style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:minHeight="48dp"
-                    android:backgroundTint="@color/primary"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
+                    android:paddingStart="0dp"
                     android:text="@string/bookmark_open"
-                    android:textColor="@color/on_primary"
-                    android:textSize="12sp" />
+                    android:textColor="@color/secondary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:icon="@drawable/ic_arrow_forward"
+                    app:iconGravity="end"
+                    app:iconSize="16dp"
+                    app:iconTint="@color/secondary" />
 
                 <Space
                     android:layout_width="0dp"
@@ -121,8 +148,7 @@
                 <ImageButton
                     android:id="@+id/bookmark_remove"
                     android:layout_width="48dp"
-                    android:layout_height="wrap_content"
-                    android:minHeight="48dp"
+                    android:layout_height="48dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/bookmark_remove"
                     android:src="@drawable/ic_trash"

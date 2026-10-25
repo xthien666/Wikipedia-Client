@@ -1,43 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="@dimen/page_gutter"
-    android:layout_marginTop="8dp"
-    android:layout_marginEnd="@dimen/page_gutter"
-    android:clickable="true"
-    android:focusable="true"
-    app:cardBackgroundColor="@color/surface_container_lowest"
-    app:cardCornerRadius="@dimen/card_radius"
-    app:cardElevation="0.5dp"
-    app:strokeColor="@color/card_stroke"
-    app:strokeWidth="1dp">
+    style="@style/Widget.WikiRead.SuggestionCard"
+    android:layout_marginTop="10dp">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="48dp"
-        android:orientation="vertical"
-        android:padding="14dp">
+        style="@style/Widget.WikiRead.SuggestionRow"
+        android:minHeight="48dp">
 
-        <TextView
-            android:id="@+id/result_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="serif"
-            android:textColor="@color/on_surface"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.WikiRead.Thumb"
+            android:layout_width="64dp"
+            android:layout_height="64dp">
 
-        <TextView
-            android:id="@+id/result_snippet"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:ellipsize="end"
-            android:maxLines="3"
-            android:textColor="@color/on_surface_variant"
-            android:textSize="13sp" />
+            <ImageView
+                android:id="@+id/result_thumbnail"
+                style="@style/Widget.WikiRead.ThumbImage" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <LinearLayout
+            style="@style/Widget.WikiRead.SuggestionText"
+            android:layout_marginEnd="4dp">
+
+            <TextView
+                android:id="@+id/result_title"
+                style="@style/Widget.WikiRead.SuggestionTitle"
+                android:layout_marginTop="0dp"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/result_snippet"
+                style="@style/Widget.WikiRead.SuggestionSnippet"
+                android:layout_marginTop="4dp"
+                android:maxLines="3" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_chevron_right" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

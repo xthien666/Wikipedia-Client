@@ -6,4 +6,5 @@
     <dimen name="chip_radius">8dp</dimen>
     <dimen name="item_spacing">12dp</dimen>
     <dimen name="section_spacing">20dp</dimen>
+    <dimen name="thumb_size">76dp</dimen>
 </resources>

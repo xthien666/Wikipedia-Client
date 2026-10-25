@@ -7,6 +7,8 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.wikipediaclient.data.model.SearchResult;
 import com.example.wikipediaclient.databinding.ItemSearchResultBinding;
+import com.example.wikipediaclient.ui.common.WikiThumbnails;
+import android.view.View;
 
 public final class SearchResultAdapter extends ListAdapter<SearchResult, SearchResultAdapter.Holder> {
     public interface OnResultClick { void onClick(SearchResult result); }
@@ -21,10 +23,16 @@ public final class SearchResultAdapter extends ListAdapter<SearchResult, SearchR
     };
 
     private final OnResultClick listener;
+    private final WikiThumbnails thumbnails;
 
     public SearchResultAdapter(OnResultClick listener) {
+        this(listener, WikiThumbnails.disabled());
+    }
+
+    public SearchResultAdapter(OnResultClick listener, WikiThumbnails thumbnails) {
         super(DIFF);
         this.listener = listener;
+        this.thumbnails = thumbnails;
         setStateRestorationPolicy(StateRestorationPolicy.PREVENT_WHEN_EMPTY);
     }
 
@@ -38,7 +46,13 @@ public final class SearchResultAdapter extends ListAdapter<SearchResult, SearchR
         SearchResult result = getItem(position);
         holder.binding.resultTitle.setText(result.getTitle());
         holder.binding.resultSnippet.setText(result.getSnippet());
+        holder.binding.resultSnippet.setVisibility(result.getSnippet().isEmpty() ? View.GONE : View.VISIBLE);
+        thumbnails.load(result.getTitle(), holder.binding.resultThumbnail);
         holder.binding.getRoot().setOnClickListener(v -> listener.onClick(result));
+    }
+
+    @Override public void onViewRecycled(@NonNull Holder holder) {
+        thumbnails.cancel(holder.binding.resultThumbnail);
     }
 
     static final class Holder extends RecyclerView.ViewHolder {

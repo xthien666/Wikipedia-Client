@@ -36,4 +36,34 @@
     <style name="Widget.WikiRead.ActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
         <item name="android:color">@color/primary</item>
     </style>
+
+    <!-- Editorial serif title used by the top app bar (Stitch "headline-sm"). -->
+    <style name="TextAppearance.WikiRead.AppBarTitle" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">serif</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textColor">@color/primary</item>
+    </style>
+
+    <!-- Uppercase blue overline used for categories and section labels. -->
+    <style name="TextAppearance.WikiRead.Overline" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/secondary</item>
+    </style>
+
+    <!-- Pill action used in the reader header (Stitch quick-action chips). -->
+    <style name="Widget.WikiRead.ReaderAction" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="iconTint">@color/primary</item>
+        <item name="iconSize">18dp</item>
+        <item name="iconPadding">6dp</item>
+        <item name="strokeColor">@color/outline_variant</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">16dp</item>
+    </style>
 </resources>
