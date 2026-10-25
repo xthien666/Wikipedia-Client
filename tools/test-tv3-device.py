@@ -3,7 +3,9 @@ import argparse, base64, datetime, hashlib, json, pathlib, re, subprocess, sys, 
 sys.stdout.reconfigure(encoding='utf-8')
 p=argparse.ArgumentParser()
 p.add_argument('--adb',default='adb'); p.add_argument('--serial',required=True)
-p.add_argument('--output',default='build/tv3-device'); a=p.parse_args()
+p.add_argument('--output',default='build/tv3-device')
+p.add_argument('--offline-process-death',action='store_true',help='Emulator only: also restore the task without network, then recover')
+a=p.parse_args()
 out=pathlib.Path(a.output); out.mkdir(parents=True,exist_ok=True)
 pkg='com.example.wikipediaclient'
 def adb(*args,data=None,check=True,timeout=60):
@@ -22,7 +24,16 @@ def tree():
     start=raw.find('<?xml'); end=raw.rfind('</hierarchy>')
     if start<0 or end<0: raise RuntimeError(raw)
     return raw[start:end+12]
-backup={}; rotation={}; report={}; failure=None; backup_complete=False
+def restore_network():
+    for service,value in network.items(): shell('svc',service,'enable' if value=='1' else 'disable')
+    for _ in range(20):
+        if all(shell('settings','get','global',key)==network[service]
+               for service,key in (('wifi','wifi_on'),('data','mobile_data')) if service in network):
+            report['networkRestored']=True; return
+        time.sleep(.25)
+    raise AssertionError('Network settings were not restored')
+
+backup={}; rotation={}; network={}; report={}; failure=None; backup_complete=False
 try:
     stop()
     for name in files(): backup[name]=adb('exec-out','run-as',pkg,'cat',name).stdout
@@ -74,6 +85,50 @@ try:
     (out/'after-process-death.xml').write_text(after,encoding='utf8')
     (out/'reader-process-restored.png').write_bytes(adb('exec-out','screencap','-p').stdout)
     report['checks'].append('T15 real process death restores article and reloads HTML')
+    if a.offline_process_death:
+        if shell('getprop','ro.kernel.qemu')!='1': raise AssertionError('Offline QA is restricted to emulators')
+        for service,key in (('wifi','wifi_on'),('data','mobile_data')):
+            value=shell('settings','get','global',key)
+            if value not in ('0','1'): raise AssertionError('Cannot snapshot network setting '+key)
+            network[service]=value
+        report['networkBefore']=dict(network)
+        shell('input','keyevent','3')
+        for attempt in range(15):
+            shell('am','kill',pkg); time.sleep(1)
+            if not adb('shell','pidof',pkg,check=False).stdout.strip(): break
+        else: raise AssertionError('Offline test could not terminate process')
+        for service in network: shell('svc',service,'disable')
+        time.sleep(2)
+        shell('am','start','-W','-n',pkg+'/.MainActivity')
+        offline_outcome=None
+        for attempt in range(25):
+            offline=tree(); root=ET.fromstring(offline)
+            article=next((n for n in root.iter('node') if n.get('resource-id')==pkg+':id/article_title'),None)
+            share=next((n for n in root.iter('node') if n.get('resource-id')==pkg+':id/action_share'),None)
+            retry=next((n for n in root.iter('node') if n.get('resource-id')==pkg+':id/status_action'),None)
+            message=next((n for n in root.iter('node') if n.get('resource-id')==pkg+':id/status_message'),None)
+            if article is not None and article.get('text')==expected_title and share is not None:
+                if share.get('enabled')=='true': offline_outcome='http-cache'; break
+                if retry is not None and message is not None and 'Kiểm tra kết nối mạng' in message.get('text',''):
+                    offline_outcome='connection-error'; break
+            time.sleep(1)
+        if offline_outcome is None: raise AssertionError('Offline task did not restore cached article or actionable connection error')
+        report['offlineOutcome']=offline_outcome
+        (out/'offline-process-death.xml').write_text(offline,encoding='utf8')
+        (out/'reader-offline-restored.png').write_bytes(adb('exec-out','screencap','-p').stdout)
+        report['checks'].append('T15 offline process death keeps correct article: '+offline_outcome)
+        restore_network(); time.sleep(3)
+        if offline_outcome=='connection-error':
+            x1,y1,x2,y2=map(int,re.findall(r'\d+',retry.get('bounds')))
+            shell('input','tap',str((x1+x2)//2),str((y1+y2)//2))
+            for attempt in range(25):
+                recovered=ET.fromstring(tree())
+                share=next((n for n in recovered.iter('node') if n.get('resource-id')==pkg+':id/action_share'),None)
+                article=next((n for n in recovered.iter('node') if n.get('resource-id')==pkg+':id/article_title'),None)
+                if share is not None and share.get('enabled')=='true' and article is not None and article.get('text')==expected_title: break
+                time.sleep(1)
+            else: raise AssertionError('Retry did not recover the same article after restoring network')
+            report['checks'].append('T05 retry after offline process death renders the same article')
     crash=adb('logcat','-b','crash','-d').stdout
     (out/'crash-log.txt').write_bytes(crash)
     if crash!=crash_before: raise AssertionError('Crash buffer changed during reader QA')
@@ -81,6 +136,10 @@ try:
 except BaseException as exc:
     failure=exc; report.update(result='FAIL',hostFailure=str(exc))
 finally:
+    if network:
+        try: restore_network()
+        except Exception as exc:
+            failure=exc; report.update(result='FAIL',networkRestoreFailure=str(exc))
     try:
         if backup_complete:
             stop()

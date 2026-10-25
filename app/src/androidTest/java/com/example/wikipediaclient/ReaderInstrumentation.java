@@ -85,6 +85,39 @@ public final class ReaderInstrumentation extends Instrumentation {
         ((WikiApplication)activity().getApplication()).getContainer().getDiskExecutor().submit(() -> {}).get();
         waitForIdleSync();
     }
+    private com.example.wikipediaclient.data.model.ArticleContent displayedContent() {
+        return ui(() -> {
+            androidx.fragment.app.Fragment reader = ((NavHostFragment) activity().getSupportFragmentManager()
+                    .findFragmentById(R.id.nav_host_fragment)).getChildFragmentManager().getPrimaryNavigationFragment();
+            return new androidx.lifecycle.ViewModelProvider(reader).get(ArticleViewModel.class).state().getValue().content;
+        });
+    }
+    private void verifySourceActions(String label) throws Exception {
+        com.example.wikipediaclient.data.model.ArticleContent content = displayedContent();
+        List<Intent> dispatched = new ArrayList<>();
+        ActivityMonitor monitor = new ActivityMonitor() {
+            @Override public ActivityResult onStartActivity(Intent intent) {
+                dispatched.add(intent); return new ActivityResult(Activity.RESULT_CANCELED, null);
+            }
+        };
+        addMonitor(monitor);
+        try {
+            runOnMainSync(() -> {
+                activity().findViewById(R.id.action_share).performClick();
+                activity().findViewById(R.id.btn_view_original).performClick();
+                activity().findViewById(R.id.article_license).performClick();
+            });
+            check(dispatched.size() == 3, "T12 " + label + " dispatches share, original and license");
+            Intent chooser = dispatched.get(0);
+            Intent send = chooser.getParcelableExtra(Intent.EXTRA_INTENT);
+            check(Intent.ACTION_CHOOSER.equals(chooser.getAction()) && send != null
+                    && content.article.getCanonicalUrl().equals(send.getStringExtra(Intent.EXTRA_TEXT)),
+                    "T12 " + label + " Sharesheet uses committed canonical URL");
+            check(content.article.getCanonicalUrl().equals(dispatched.get(1).getDataString())
+                    && content.licenseUrl.equals(dispatched.get(2).getDataString()),
+                    "T12 " + label + " original and license match displayed metadata");
+        } finally { removeMonitor(monitor); }
+    }
     @Override public void onStart() {
         JSONObject report = new JSONObject(); Throwable failure = null;
         try {
@@ -138,10 +171,12 @@ public final class ReaderInstrumentation extends Instrumentation {
             List<PersonalArticleEntry> bookmarks = ((WikiApplication)activity().getApplication()).getContainer().getDiskExecutor()
                     .submit(() -> ((WikiApplication)activity().getApplication()).getContainer().getBookmarkRepository().getBookmarks()).get();
             check(bookmarks.stream().anyMatch(e -> e.getArticle().getTitle().equals("Hệ Mặt Trời")), "T07 reader saves canonical B, never A");
+            verifySourceActions("article B");
             screenshot("reader-solar-system");
             stage = "Back A"; back(); ready();
             check(title().equals("Hà Nội"), "T07 Back restores article A metadata");
             check(withinScreen(saved), "T07 Back restores A reading position");
+            verifySourceActions("Back to A");
             screenshot("reader-restored");
             stage = "rotate";
             MainActivity before = activity();
@@ -171,6 +206,17 @@ public final class ReaderInstrumentation extends Instrumentation {
             runOnMainSync(() -> ((WikiApplication)activity().getApplication()).getContainer().getReaderSettings().setFontSize(22));
             openArticle("Hà Thành"); ready(); drainDisk();
             check(title().equals("Hà Nội"), "T14 live alias resolves to canonical Hà Nội");
+            androidx.navigation.NavController aliasController = ui(() -> ((NavHostFragment) activity()
+                    .getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment)).getNavController());
+            androidx.navigation.NavBackStackEntry aliasEntry = ui(aliasController::getCurrentBackStackEntry);
+            runOnMainSync(() -> {
+                androidx.fragment.app.Fragment reader = ((NavHostFragment) activity().getSupportFragmentManager()
+                        .findFragmentById(R.id.nav_host_fragment)).getChildFragmentManager().getPrimaryNavigationFragment();
+                com.example.wikipediaclient.ui.navigation.ArticleNavigator.open(reader,
+                        new com.example.wikipediaclient.data.model.ArticleLocator("vi", "Hà Nội", 80L));
+            }); waitForIdleSync();
+            check(ui(() -> aliasController.getCurrentBackStackEntry() == aliasEntry),
+                    "T14 reopening resolved canonical ID does not duplicate alias entry");
             check(ui(() -> web().getSettings().getDefaultFontSize() == 22), "T11 persisted font size applies to real HTML");
             runOnMainSync(() -> {
                 if (!((android.widget.TextView)activity().findViewById(R.id.action_save)).getText().toString().equals("Bỏ yêu thích"))

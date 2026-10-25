@@ -127,6 +127,13 @@ public class ArticleViewModelTest {
         assertNull(restored.state().getValue().content);
         assertEquals(WikiApiException.Kind.NO_CONNECTION, restored.state().getValue().error.getKind());
     }
+    @Test public void resolvedLocatorIsSavedForReloadWithoutRetainingHtml() {
+        ArticleContent value = load();
+        assertEquals(value.article.getTitle(), saved.get("title"));
+        assertEquals(Long.valueOf(value.article.getPageId()), saved.get("pageId"));
+        assertFalse(saved.keys().contains("html"));
+        assertEquals(0f, model.progress(), 0f);
+    }
     @Test public void clearedModelRejectsNetworkAndQueuedDiskCallbacks() {
         model.start(); model.onCleared();
         articles.calls.get(0).onSuccess(FixtureArticles.article("Late"));

@@ -54,7 +54,10 @@ public final class ArticleViewModel extends ViewModel {
         request = articles.getContent(title, new ApiCallback<ArticleContent>() {
             @Override public void onSuccess(ArticleContent value) {
                 if (cleared || generation != token) return;
-                content = value; loading = false; publish(); refreshBookmark();
+                content = value;
+                saved.set("title", value.article.getTitle());
+                saved.set("pageId", value.article.getPageId());
+                loading = false; publish(); refreshBookmark();
             }
             @Override public void onError(WikiApiException value) {
                 if (cleared || generation != token) return;

@@ -131,7 +131,7 @@ Thay `emulator-5554` bằng serial thực tế. Script cần Python 3, APK debug
 
 ## Kiểm thử và CI
 
-Ngày 22/10/2026, bản tích hợp TV1/TV2/TV3/TV4 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **67/67 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle, tính bền vững của SQLite, thử lại thao tác ghi/xóa lỗi và nhận diện bài trong back stack theo pageId. GitHub Actions [run 6](https://github.com/xthien666/Wikipedia-Client/actions/runs/39803121581) đã build/test bản tích hợp TV1/TV3 trên Ubuntu; chưa xác nhận cài/chạy trên điện thoại thật hoặc máy của thành viên khác.
+Ngày 25/10/2026, bản tích hợp TV1/TV2/TV3/TV4/TV5 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **82/82 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle, tính bền vững của SQLite, thử lại thao tác ghi/xóa lỗi và nhận diện bài trong back stack theo pageId. GitHub Actions [run 6](https://github.com/xthien666/Wikipedia-Client/actions/runs/39803121581) đã build/test bản tích hợp TV1/TV3 trên Ubuntu; chưa xác nhận cài/chạy trên điện thoại thật hoặc máy của thành viên khác.
 
 Hai test host `python -m unittest discover -s tools -p test_device_backup.py` kiểm tra script không xóa/ghi đè dữ liệu khi sao lưu thất bại giữa chừng; workflow CI cũng chạy hai ca này.
 
@@ -187,7 +187,7 @@ app/src/test/                     # Unit tests Robolectric
 | TV4 | Database, repository yêu thích/lịch sử và UI yêu thích |
 | TV5 | Settings, nguồn/chia sẻ và kiểm thử tích hợp |
 
-Từ ngày 22/10/2026, cùng một người phụ trách cả TV1 và TV3; ký hiệu vai trò được giữ để đối chiếu kế hoạch và kiểm thử. Tìm kiếm, reader và lưu dữ liệu cá nhân đã tích hợp. Reader dùng metadata của bài đã resolve cho nội dung, yêu thích, lịch sử, nguồn và chia sẻ. Không truyền HTML dài qua navigation; không giữ Activity hoặc View trong ViewModel. HTTP/database cần nằm trong lớp dữ liệu, công việc blocking chạy ngoài main thread.
+Từ ngày 22/10/2026, cùng một người phụ trách cả TV1 và TV3; ký hiệu vai trò được giữ để đối chiếu kế hoạch và kiểm thử. Tìm kiếm, reader và lưu dữ liệu cá nhân đã tích hợp. Reader dùng metadata của bài đã resolve cho nội dung, yêu thích, lịch sử, nguồn và chia sẻ. Định danh đã hiển thị được lưu trong back stack để mở lại tên đích/ID sau alias không tạo màn hình trùng; locator để tải lại sau process death dùng title/ID canonical. Không truyền HTML dài qua navigation; không giữ Activity hoặc View trong ViewModel. HTTP/database cần nằm trong lớp dữ liệu, công việc blocking chạy ngoài main thread.
 
 Phần TV1/TV3 hiện được tích hợp trực tiếp trên `main`; trước khi push, chạy ba task build/lint/test ở trên và ghi rõ kiểm tra thiết bị đã thực hiện. Các phần khác có thể dùng nhánh ngắn và pull request theo quy trình nhóm. Thống nhất thay đổi Gradle, manifest, navigation và dependency dùng chung với TV1; thay đổi schema dữ liệu với TV4.
 
@@ -206,9 +206,11 @@ Bộ nghiệm thu WebView thực chạy độc lập, cần cài cả APK app v�
 adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk
 adb -s emulator-5554 install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 python tools/test-tv3-device.py --adb adb --serial emulator-5554
+# Thêm ca mất mạng khi process bị hủy, chỉ dành cho emulator:
+python tools/test-tv3-device.py --adb adb --serial emulator-5554 --offline-process-death
 ```
 
-Script lưu báo cáo JSON, ảnh, crash log, SHA-256 APK và bản sao dữ liệu tại `build/tv3-device`. Nó kiểm tra bài thật/alias, Back, xoay máy, anchor chú thích, nguồn link ngoài, cỡ chữ, lưu đúng bài và process death thật; fixture riêng mô phỏng bảng rộng/ảnh hỏng. Script sao lưu rồi khôi phục database/preferences và thiết lập xoay trong `finally`. Không thao tác đồng thời trên thiết bị khi chạy.
+Script lưu báo cáo JSON, ảnh, crash log, SHA-256 APK và bản sao dữ liệu tại `build/tv3-device`. Nó kiểm tra bài thật/alias, Back, xoay máy, anchor chú thích, nguồn link ngoài, cỡ chữ, lưu đúng bài và process death thật; fixture riêng mô phỏng bảng rộng/ảnh hỏng. Script sao lưu rồi khôi phục database/preferences và thiết lập xoay trong `finally`. Tùy chọn `--offline-process-death` còn sao lưu/khôi phục Wi-Fi và dữ liệu di động; kiểm tra reader khôi phục bài từ HTTP cache nếu có, hoặc báo lỗi có thử lại. Báo cáo ghi rõ nhánh thực tế đã chạy, không coi HTTP cache là cam kết đọc ngoại tuyến. Không thao tác đồng thời trên thiết bị khi chạy.
 
 Ngày 22/10/2026: **23/23 kiểm tra emulator đạt**, Android 16/API 36, WebView 133.0.6943.137; database/preferences đã được đối chiếu khôi phục đúng từng byte. Không phát sinh crash app. Ảnh và JSON chi tiết nằm tại máy build, không lưu trong Git. Tên/phiên bản bài có thể thay đổi khi chạy lại với Wikipedia đang hoạt động. Ca chú thích lấy ID từ HTML đang hiển thị và chờ WebView cuộn; không phụ thuộc mã chú thích cố định. Mỗi lần instrumentation chỉ xuất ảnh của chính lần chạy đó.
 
@@ -218,3 +220,10 @@ Chưa xác nhận trên điện thoại thật, TalkBack hoặc tablet. Bookmark
 ## Bàn giao TV5 ngày 23/10/2026
 
 Component nguồn/chia sẻ ở `ui/source/ArticleSourceController`; About phân biệt nội dung Wikipedia và mã ứng dụng. Bản bàn giao giữ bốn mức 14/16/18/22 sp. Xem [hồ sơ và T01–T16](docs/TV5.md), [đặc tả cỡ chữ](docs/TV5-FONT-SPEC.md) và [kịch bản demo](docs/TV5-DEMO.md). Thông tin nhóm, Android thật/TalkBack và một số ca nghiệm thu còn chờ. Kết quả 79 unit test không có nghĩa toàn bộ T01–T16 đã đạt.
+
+
+## Tích hợp TV5 và hoàn thiện TV1/TV3 — 25/10/2026
+
+Nhánh `feature/tv5-settings` (commit `a00449e`) đã được review và hợp nhất, giữ lịch sử tác giả. Component nguồn/chia sẻ dùng đúng metadata đã commit; About có các liên kết nguồn/điều khoản/project, thông tin nhóm còn chờ cung cấp. Bộ nguyên trạng TV5 đạt 79 unit test; sau bổ sung hồi quy canonical identity của TV1/TV3, tổng 82 unit test và hai test host đạt. Build APK/AndroidTest và lint thành công.
+
+Reader tích hợp đạt 32 kiểm tra trên emulator Android 16/API 36, WebView 133.0.6943.137: HTML/link/anchor/bảng/ảnh, Back và xoay, alias/định danh, cỡ chữ, bookmark/history, source/share, process death có và mất mạng. Nguồn/chia sẻ được xác minh bằng Intent native chặn trước khi mở app ngoài; chưa xác nhận trình duyệt tải trang hay gửi tới người nhận. Ca mất mạng thực tế hiện lỗi kết nối và retry tải lại đúng bài sau khi mạng trở lại; dữ liệu, xoay, Wi-Fi và dữ liệu di động đã khôi phục. Đây là kết quả emulator, chưa phải nghiệm thu điện thoại thật/TalkBack.

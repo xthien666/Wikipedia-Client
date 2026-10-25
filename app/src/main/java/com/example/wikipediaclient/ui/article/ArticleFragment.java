@@ -143,6 +143,7 @@ public final class ArticleFragment extends Fragment {
         if (binding == null || view != binding.articleBody || rendered == null || displayed || renderFailed) return;
         displayed = true;
         binding.status.setVisibility(View.GONE);
+        ArticleNavigator.displayed(this, rendered.article);
         model.displayed(rendered);
         render(model.state().getValue());
         String anchor = requireArguments().getString("anchor");

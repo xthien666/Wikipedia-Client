@@ -82,3 +82,22 @@ TV5 không đổi API/repository/DB hoặc viết lại reader. File `MainActivi
 - https://github.com/xthien666/Wikipedia-Client
 
 Giấy phép nội dung hiển thị theo metadata bài; nguồn ảnh/tác giả và lịch sử sửa đổi xem từ bài gốc. Repository hiện chưa công bố giấy phép mã nguồn ở commit nền.
+
+
+## Review và tích hợp ngày 25/10/2026
+
+TV1/TV3 đã review commit `a00449e3c6b9514258fd4926d976b67b08bde1dc` từ `feature/tv5-settings` và hợp nhất local bằng merge commit `862e8cf`, giữ lịch sử tác giả. Bản TV5 nguyên trạng build được bằng JDK 17, assembleDebug/assembleDebugAndroidTest/lintDebug đạt và 79/79 unit test không lỗi/bỏ qua. Các ảnh/video/verification mô tả trong hồ sơ bàn giao gốc không nằm trong commit; không coi đó là kết quả đã tái chạy tại máy TV1.
+
+TV1/TV3 nối tiếp bằng cách ghi định danh canonical vào back stack sau khi HTML hiển thị; mở lại tên đích/ID sau alias không đẩy màn hình trùng, cả sau recreate. SavedStateHandle dùng title/ID canonical để tải lại. Bổ sung ba ca hồi quy: tổng 82/82 unit test đạt; hai test host bảo vệ dữ liệu khi backup thất bại đạt. Các mục chờ thông tin nhóm, điện thoại thật/TalkBack và lựa chọn giấy phép mã nguồn vẫn cần chủ sở hữu cung cấp/xác nhận.
+
+
+Bản tích hợp đã chạy reader trên emulator Android 16/API 36, WebView 133.0.6943.137: 32/32 kiểm tra đạt. Bằng chứng ở máy TV1: `build/tv5-integration-20261025/reader/report.json` và các ảnh cùng thư mục. APK SHA-256: `81D1AB97725CA8BB6B44AEA7ACBCEBDFB3BEBF88F4859B8779E705F8F8A8AF57`.
+
+| Hạng mục đối chiếu hồ sơ gốc | Bằng chứng tái kiểm chứng |
+|---|---|
+| T06/T07/T14/T16 | Bài thật Hà Nội/Hệ Mặt Trời/Hà Thành, chú thích, Back/định danh, external routing; bảng rộng/ảnh hỏng bằng fixture có nhãn. |
+| T08 | Xoay khi đang đọc, vị trí sai lệch không quá một viewport. Chưa coi đây là đủ tất cả thời điểm request đang tải. |
+| T12 | Sáu assertion trên thiết bị cho article B và Back A: native Sharesheet dùng URL canonical, Bài gốc/giấy phép đúng metadata. Intent được chặn trước khi mở app ngoài; không tuyên bố đã tải trang Chrome hay gửi chia sẻ. |
+| T15 + T05 | Process thật bị hủy ở nền; khi offline reader báo lỗi, tắt thao tác nội dung cũ; bật mạng rồi retry phục hồi đúng bài. Dữ liệu/mạng/rotation khôi phục và không crash. |
+
+Các kết quả này bổ sung ma trận ngày 23/10, không thay nghiệm thu điện thoại, thông tin About thật hoặc hồ sơ báo cáo/slide/video nhóm cuối cùng.

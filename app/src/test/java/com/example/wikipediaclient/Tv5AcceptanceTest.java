@@ -151,6 +151,19 @@ public class Tv5AcceptanceTest {
         assertEquals(titleA,((TextView)activity.findViewById(R.id.article_title)).getText().toString());
         activity.findViewById(R.id.btn_view_original).performClick();assertEquals(FixtureArticles.article(titleA).article.getCanonicalUrl(),nextUrl());
     }
+    @Test public void resolvedAliasIdAvoidsDuplicateReaderAfterRecreation(){
+        navigate("Alias");committed();
+        lifecycle.recreate();idle();activity=lifecycle.get();committed();
+        NavHostFragment host=(NavHostFragment)activity.getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+        ArticleNavigator.open(host.getChildFragmentManager().getPrimaryNavigationFragment(),new ArticleLocator("vi","Hà Nội",11L));idle();
+        activity.getOnBackPressedDispatcher().onBackPressed();idle();
+        assertNotNull(activity.findViewById(R.id.query_input));
+    }
+    @Test public void resolvedAliasTitleAvoidsDuplicateWithoutPageId(){
+        navigate("Alias");committed();navigate("Hà Nội");
+        activity.getOnBackPressedDispatcher().onBackPressed();idle();
+        assertNotNull(activity.findViewById(R.id.query_input));
+    }
     @Test public void t05TimeoutOfflineAndBadJsonDisableSourceAndOfferRetry(){
         for(String title:new String[]{"ErrorTimeout","ErrorOffline","ErrorJSON"}){
             navigate(title);assertFalse(activity.findViewById(R.id.action_share).isEnabled());
