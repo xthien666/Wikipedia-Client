@@ -101,3 +101,7 @@ Bản tích hợp đã chạy reader trên emulator Android 16/API 36, WebView 1
 | T15 + T05 | Process thật bị hủy ở nền; khi offline reader báo lỗi, tắt thao tác nội dung cũ; bật mạng rồi retry phục hồi đúng bài. Dữ liệu/mạng/rotation khôi phục và không crash. |
 
 Các kết quả này bổ sung ma trận ngày 23/10, không thay nghiệm thu điện thoại, thông tin About thật hoặc hồ sơ báo cáo/slide/video nhóm cuối cùng.
+
+Kiểm tra bổ sung trên UI thật: bốn lựa chọn chữ có nhãn chứa cỡ sp; phần About cuộn tới được các link nguồn/điều khoản/GitHub và nội dung chờ thông tin nhóm/giấy phép mã app. Hai kiểm tra đạt, ảnh/cây UI ở `build/tv5-integration-20261025/settings/`. Đây là đọc UI, không thay đổi lựa chọn cỡ chữ hay dữ liệu.
+
+Hồi quy TV1 cuối cùng đạt 11/11 nhóm trên cùng APK; tổng Reader 32 + TV1 11 + Settings 2 = 45 kiểm tra (có phần giao nhau). Bản thử TV1 đầu lỗi lấy cây UI root rỗng khi WebView chuyển trang, dữ liệu đã khôi phục và không có log crash; chỉ thêm tối đa ba lần lấy lại cây UI, các assertion chức năng không đổi. Báo cáo đạt: `build/tv5-integration-20261025/tv1-retest/report.json`; báo cáo lỗi ban đầu vẫn giữ ở `tv1/report.json`. Build nguồn Git sạch của phần Android tại 005ea6e thành công trên cùng Windows; chưa thay nghiệm thu máy thành viên khác.

@@ -48,10 +48,14 @@ def shell(*command):
 def tree(label="ui"):
     global sequence
     sequence += 1
-    raw = adb("exec-out", "uiautomator", "dump", "/dev/tty").stdout.decode("utf-8", "replace")
-    start, end = raw.find("<?xml"), raw.rfind("</hierarchy>")
-    if start < 0 or end < 0:
-        raise RuntimeError("UI hierarchy unavailable: " + raw)
+    # WebView transitions can briefly return a null accessibility root; retry acquisition only.
+    for attempt in range(3):
+        raw = adb("exec-out", "uiautomator", "dump", "/dev/tty").stdout.decode("utf-8", "replace")
+        start, end = raw.find("<?xml"), raw.rfind("</hierarchy>")
+        if start >= 0 and end >= 0: break
+        if attempt < 2: time.sleep(.75)
+    else:
+        raise RuntimeError("UI hierarchy unavailable after 3 attempts: " + raw)
     raw = raw[start:end + len("</hierarchy>")]
     (output / f"{sequence:02d}-{label}.xml").write_text(raw, encoding="utf-8")
     return ET.fromstring(raw)
