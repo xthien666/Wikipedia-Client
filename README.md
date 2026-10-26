@@ -1,6 +1,6 @@
 # WikiRead — Wikipedia Client
 
-Ứng dụng Android phục vụ đồ án nhóm 5 thành viên, hướng tới tìm kiếm, đọc và quản lý bài viết Wikipedia tiếng Việt. Mã nguồn hiện tại là bản **prototype 0.1.0**: đã tích hợp tìm kiếm Wikipedia thật, reader toàn bài HTML/WebView, kho SQLite và UI yêu thích/lịch sử.
+Ứng dụng Android phục vụ đồ án nhóm 4 thành viên, hướng tới tìm kiếm, đọc và quản lý bài viết Wikipedia tiếng Việt. Mã nguồn hiện tại là bản **prototype 0.1.0**: đã tích hợp tìm kiếm Wikipedia thật, reader toàn bài HTML/WebView, kho SQLite và UI yêu thích/lịch sử.
 
 ## Trạng thái chức năng
 
@@ -239,3 +239,9 @@ Mã hiện tại đã qua `assembleDebug`, `assembleDebugAndroidTest`, `lintDebu
 Cài đặt đạt thêm bốn ca trên emulator: cả bốn mức chữ có trạng thái chọn và giá trị đúng; mức 22sp còn giữ sau khởi động lại; giao diện hoạt động ở font scale 1.3 khi hệ thống bật dark mode; màn hình ngang vẫn cuộn được. App tiếp tục dùng giao diện sáng theo thiết kế hiện tại. Preferences và thiết lập hệ thống đã được khôi phục, đối chiếu sau kiểm tra.
 
 Reader cập nhật đạt **30/30 kiểm tra TV3** trên cùng APK: bài thật, định danh canonical/alias, nguồn/chia sẻ, Back và vị trí đọc, xoay máy, cỡ chữ, bảng rộng/ảnh hỏng và khôi phục sau process death. Dữ liệu app đã khôi phục; lượt UX/UI này không chạy lại tùy chọn `--offline-process-death`. Bằng chứng của lượt kiểm tra lưu cục bộ tại `build/ux-review/` và không commit ảnh hay output build.
+
+## Cập nhật TV5 - 26/10/2026
+
+About đã điền bốn họ tên/MSSV được nhóm xác nhận. Build APK/AndroidTest thành công, 85/85 unit test đạt và lint có 0 lỗi, 99 cảnh báo. Chrome trên emulator đã tải bài gốc và giấy phép từ reader; Sharesheet dùng canonical URL. TalkBack emulator đã thử Tab/Enter vào Settings và chọn 14sp; chữ hệ thống 150% cuộn tới được About. Chưa chứng nhận nghe đọc/chạm trên Android thật.
+
+Lượt reader trên Android 17/API 37 đạt 16 assertion rồi dừng tại T08: xoay giữ đúng bài nhưng vị trí đọc vượt dung sai. TV1/TV3 cần kiểm chứng trên APK này. Các ca sau điểm dừng chưa chạy lại; không lấy kết quả cũ thay cho APK mới. Hồ sơ và ma trận mới: [TV5 ngày 26/10](docs/TV5-20261026.md), [đối chiếu rubric/cỡ chữ](docs/TV5-RUBRIC.md). Báo cáo/slide hiện là bản nhóm rà soát; rubric chính thức và nghiệm thu điện thoại còn chờ.

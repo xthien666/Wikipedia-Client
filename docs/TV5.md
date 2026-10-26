@@ -1,3 +1,5 @@
+> Cập nhật 26/10/2026: About đã có 4 họ tên/MSSV theo xác nhận. Xem [báo cáo mới](TV5-20261026.md) và [đối chiếu cỡ chữ](TV5-RUBRIC.md). Các mục phía dưới là hồ sơ lịch sử ngày 23/25/10, có thể khác trạng thái hiện tại.
+
 # TV5 - Hồ sơ bàn giao ngày 23/10/2026
 
 Nền Git: `bbdf0c481ee872abb1bf4c13cdb72e1db70cca32` cộng thay đổi TV5 chưa commit/push. APK: `WikiRead-TV5-debug.apk`.
