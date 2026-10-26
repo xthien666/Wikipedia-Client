@@ -3,6 +3,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
+import androidx.annotation.Nullable;
+import com.example.wikipediaclient.data.model.SearchContinuation;
 import com.example.wikipediaclient.data.model.SearchPage;
 import com.example.wikipediaclient.data.model.SearchResult;
 import com.example.wikipediaclient.data.remote.ApiCallback;
@@ -31,7 +33,8 @@ public final class SearchViewModel extends ViewModel {
     private boolean loadMoreFailed;
     private String activeQuery = "";
     private final List<SearchResult> loaded = new ArrayList<>();
-    private Integer nextOffset;
+    /** Full {@code continue} object of the last page; null when there is no next page. */
+    private SearchContinuation next;
 
     public SearchViewModel(SavedStateHandle savedState, SearchRepository repository, DelayedExecutor executor) {
         this.savedState = savedState;
@@ -74,19 +77,18 @@ public final class SearchViewModel extends ViewModel {
     public void loadMore() {
         SearchUiState current = state.getValue();
         if (current == null || current.getType() != SearchUiState.Type.SUCCESS
-                || nextOffset == null || loadingMore || loadMoreFailed) return;
+                || next == null || loadingMore || loadMoreFailed) return;
         loadingMore = true;
         final int token = generation;
-        final int requestedOffset = nextOffset;
+        final SearchContinuation requested = next;
         state.setValue(SearchUiState.success(loaded, true, false, true));
-        inFlight = repository.search(activeQuery, nextOffset, new ApiCallback<SearchPage>() {
+        inFlight = repository.search(activeQuery, requested, new ApiCallback<SearchPage>() {
             @Override public void onSuccess(SearchPage page) {
                 if (token != generation) return;
                 loadingMore = false;
                 appendUnique(page.getResults());
-                Integer offset = page.getNextOffset();
-                nextOffset = offset != null && offset > requestedOffset ? offset : null;
-                state.setValue(SearchUiState.success(loaded, nextOffset != null, false));
+                next = advancing(requested, page.getContinuation());
+                state.setValue(SearchUiState.success(loaded, next != null, false));
             }
             @Override public void onError(WikiApiException error) {
                 if (token != generation) return;
@@ -100,7 +102,7 @@ public final class SearchViewModel extends ViewModel {
     public void retryLoadMore() {
         if (!loadMoreFailed) return;
         loadMoreFailed = false;
-        state.setValue(SearchUiState.success(loaded, nextOffset != null, false));
+        state.setValue(SearchUiState.success(loaded, next != null, false));
         loadMore();
     }
 
@@ -109,19 +111,18 @@ public final class SearchViewModel extends ViewModel {
         final int token = generation;
         activeQuery = query;
         state.setValue(SearchUiState.loading());
-        inFlight = repository.search(query, 0, new ApiCallback<SearchPage>() {
+        inFlight = repository.search(query, null, new ApiCallback<SearchPage>() {
             @Override public void onSuccess(SearchPage page) {
                 if (token != generation) return;
                 loaded.clear();
                 appendUnique(page.getResults());
-                Integer offset = page.getNextOffset();
-                nextOffset = offset != null && offset > 0 ? offset : null;
+                next = advancing(null, page.getContinuation());
                 state.setValue(loaded.isEmpty() ? SearchUiState.empty()
-                        : SearchUiState.success(loaded, nextOffset != null, false));
+                        : SearchUiState.success(loaded, next != null, false));
             }
             @Override public void onError(WikiApiException error) {
                 if (token != generation) return;
-                state.setValue(SearchUiState.error(error.getKind()));
+                state.setValue(SearchUiState.error(error));
             }
         });
     }
@@ -131,11 +132,22 @@ public final class SearchViewModel extends ViewModel {
         loadingMore = false;
         loadMoreFailed = false;
         loaded.clear();
-        nextOffset = null;
+        next = null;
         if (inFlight != null) {
             inFlight.cancel();
             inFlight = null;
         }
+    }
+
+    /** Drops a continuation that would repeat or rewind the page just loaded, so paging cannot loop. */
+    @Nullable
+    private static SearchContinuation advancing(@Nullable SearchContinuation requested,
+                                                @Nullable SearchContinuation received) {
+        if (received == null || received.equals(requested)) return null;
+        Integer offset = received.getOffset();
+        if (offset == null) return received;
+        Integer previous = requested == null ? Integer.valueOf(0) : requested.getOffset();
+        return previous == null || offset > previous ? received : null;
     }
 
     private void appendUnique(List<SearchResult> results) {

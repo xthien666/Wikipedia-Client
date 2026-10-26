@@ -168,8 +168,7 @@ public final class SearchFragment extends Fragment {
                         R.string.search_empty_title, R.string.search_empty_message);
                 break;
             case ERROR:
-                binding.status.showError(R.string.search_error_title,
-                        getString(errorMessage(ui.getErrorKind())), model::retry);
+                binding.status.showError(R.string.search_error_title, errorText(ui), model::retry);
                 break;
             case SUCCESS:
                 binding.status.setVisibility(View.GONE);
@@ -187,6 +186,15 @@ public final class SearchFragment extends Fragment {
                 adapter.submitList(null);
                 break;
         }
+    }
+
+    private String errorText(SearchUiState ui) {
+        if (ui.isRateLimited()) {
+            return ui.getRetryAfterSeconds() > 0
+                    ? getString(R.string.search_error_rate_limited_wait, ui.getRetryAfterSeconds())
+                    : getString(R.string.search_error_rate_limited);
+        }
+        return getString(errorMessage(ui.getErrorKind()));
     }
 
     @StringRes

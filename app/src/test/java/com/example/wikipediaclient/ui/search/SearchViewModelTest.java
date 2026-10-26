@@ -2,6 +2,8 @@ package com.example.wikipediaclient.ui.search;
 
 import static org.junit.Assert.*;
 import androidx.lifecycle.SavedStateHandle;
+import androidx.annotation.Nullable;
+import com.example.wikipediaclient.data.model.SearchContinuation;
 import com.example.wikipediaclient.data.model.SearchPage;
 import com.example.wikipediaclient.data.model.SearchResult;
 import com.example.wikipediaclient.data.remote.ApiCallback;
@@ -10,7 +12,9 @@ import com.example.wikipediaclient.data.remote.WikiApiException;
 import com.example.wikipediaclient.data.repository.SearchRepository;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,16 +26,20 @@ import org.robolectric.annotation.Config;
 @Config(sdk = 28)
 public class SearchViewModelTest {
     private static final class Call {
-        final String query; final int offset; final ApiCallback<SearchPage> callback; boolean cancelled;
-        Call(String query, int offset, ApiCallback<SearchPage> callback) {
-            this.query = query; this.offset = offset; this.callback = callback;
+        final String query; @Nullable final SearchContinuation continuation; final int offset;
+        final ApiCallback<SearchPage> callback; boolean cancelled;
+        Call(String query, @Nullable SearchContinuation continuation, ApiCallback<SearchPage> callback) {
+            this.query = query; this.continuation = continuation; this.callback = callback;
+            Integer next = continuation == null ? null : continuation.getOffset();
+            this.offset = next == null ? 0 : next;
         }
     }
 
     private static final class FakeRepository implements SearchRepository {
         final List<Call> calls = new ArrayList<>();
-        @Override public Cancelable search(String query, int offset, ApiCallback<SearchPage> callback) {
-            Call call = new Call(query, offset, callback);
+        @Override public Cancelable search(String query, @Nullable SearchContinuation continuation,
+                                           ApiCallback<SearchPage> callback) {
+            Call call = new Call(query, continuation, callback);
             calls.add(call);
             return () -> call.cancelled = true;
         }
@@ -203,5 +211,106 @@ public class SearchViewModelTest {
         assertEquals(1, model.getState().getValue().getResults().size());
         assertEquals(7, model.getState().getValue().getResults().get(0).getPageId());
         assertFalse(model.getState().getValue().isLoadMoreFailed());
+    }
+    // --- Continuation -------------------------------------------------------------------
+
+    @Test public void loadMoreSendsBackTheWholeContinuationObject() {
+        Map<String, String> cont = new LinkedHashMap<>();
+        cont.put("sroffset", "20");
+        cont.put("continue", "-||");
+        model.setQuery("a"); executor.fire();
+        assertNull("First page has no continuation", repository.last().continuation);
+        repository.last().callback.onSuccess(
+                new SearchPage(results(1, 2), new SearchContinuation(cont), 100));
+
+        model.loadMore();
+        assertEquals(new SearchContinuation(cont), repository.last().continuation);
+        assertEquals("-||", repository.last().continuation.getParams().get("continue"));
+    }
+
+    @Test public void continuationWithoutOffsetStillPagesAndStopsWhenRepeated() {
+        SearchContinuation token = new SearchContinuation(Collections.singletonMap("continue", "abc"));
+        model.setQuery("a"); executor.fire();
+        repository.last().callback.onSuccess(new SearchPage(results(1), token, 10));
+        assertTrue(model.getState().getValue().hasMore());
+        model.loadMore();
+        assertEquals(token, repository.last().continuation);
+        repository.last().callback.onSuccess(new SearchPage(results(2), token, 10)); // same token again
+        assertFalse("A repeated continuation must not loop", model.getState().getValue().hasMore());
+    }
+
+    // --- Network errors, rate limiting and recovery ---------------------------------------
+
+    @Test public void offlineErrorThenRetryRecovers() {
+        model.setQuery("Hà Nội"); executor.fire();
+        repository.last().callback.onError(new WikiApiException(WikiApiException.Kind.NO_CONNECTION, "offline", null));
+        assertEquals(SearchUiState.Type.ERROR, type());
+        assertEquals(WikiApiException.Kind.NO_CONNECTION, model.getState().getValue().getErrorKind());
+        assertFalse(model.getState().getValue().isRateLimited());
+
+        model.retry();
+        assertEquals(SearchUiState.Type.LOADING, type());
+        assertEquals(2, repository.calls.size());
+        assertNull(repository.last().continuation);
+        repository.last().callback.onSuccess(page(20, 1, 2));
+        assertEquals(SearchUiState.Type.SUCCESS, type());
+        assertEquals(2, model.getState().getValue().getResults().size());
+    }
+
+    @Test public void rateLimitedErrorExposesWaitThenRetryRecovers() {
+        model.setQuery("a"); executor.fire();
+        repository.last().callback.onError(new WikiApiException(
+                WikiApiException.Kind.SERVER, "HTTP 429", null, 429, 30_000));
+        SearchUiState ui = model.getState().getValue();
+        assertEquals(SearchUiState.Type.ERROR, ui.getType());
+        assertTrue(ui.isRateLimited());
+        assertEquals(30, ui.getRetryAfterSeconds());
+
+        model.retry();
+        repository.last().callback.onSuccess(page(null, 5));
+        assertEquals(SearchUiState.Type.SUCCESS, type());
+        assertFalse(model.getState().getValue().isRateLimited());
+    }
+
+    @Test public void serviceUnavailableWithoutRetryAfterHasUnknownWait() {
+        model.setQuery("a"); executor.fire();
+        repository.last().callback.onError(new WikiApiException(
+                WikiApiException.Kind.SERVER, "HTTP 503", null, 503));
+        assertTrue(model.getState().getValue().isRateLimited());
+        assertEquals(-1, model.getState().getValue().getRetryAfterSeconds());
+    }
+
+    @Test public void ordinaryServerErrorIsNotReportedAsRateLimit() {
+        model.setQuery("a"); executor.fire();
+        repository.last().callback.onError(new WikiApiException(
+                WikiApiException.Kind.SERVER, "HTTP 500", null, 500));
+        assertFalse(model.getState().getValue().isRateLimited());
+    }
+
+    @Test public void rateLimitedLoadMoreKeepsResultsAndRecoversWithSameContinuation() {
+        Map<String, String> cont = new LinkedHashMap<>();
+        cont.put("sroffset", "20");
+        cont.put("continue", "-||");
+        model.setQuery("a"); executor.fire();
+        repository.last().callback.onSuccess(new SearchPage(results(1, 2), new SearchContinuation(cont), 50));
+        model.loadMore();
+        repository.last().callback.onError(new WikiApiException(
+                WikiApiException.Kind.SERVER, "HTTP 429", null, 429, 5_000));
+        assertTrue(model.getState().getValue().isLoadMoreFailed());
+        assertEquals(2, model.getState().getValue().getResults().size());
+
+        model.retryLoadMore();
+        assertEquals(new SearchContinuation(cont), repository.last().continuation);
+        repository.last().callback.onSuccess(page(null, 3));
+        SearchUiState ui = model.getState().getValue();
+        assertFalse(ui.isLoadMoreFailed());
+        assertEquals(3, ui.getResults().size());
+        assertFalse(ui.hasMore());
+    }
+
+    private static List<SearchResult> results(long... ids) {
+        List<SearchResult> list = new ArrayList<>();
+        for (long id : ids) list.add(new SearchResult(id, "Bài " + id, "Tóm tắt", null));
+        return list;
     }
 }

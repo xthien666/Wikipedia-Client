@@ -9,8 +9,13 @@ import com.android.volley.RequestQueue;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import androidx.annotation.Nullable;
+import com.example.wikipediaclient.data.model.SearchContinuation;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.json.JSONObject;
 
 /** Thin Volley wrapper for vi.wikipedia.org. Returns raw JSON; mapping lives in the mappers. */
@@ -20,12 +25,26 @@ public final class WikipediaApi {
     private static final int TIMEOUT_MS = 10_000;
     private static final int MAX_RETRIES = 1;
 
+    /** Request parameters a server-sent continuation must never override. */
+    private static final Set<String> FIXED_SEARCH_PARAMS = new HashSet<>(Arrays.asList(
+            "action", "list", "srnamespace", "srsearch", "srlimit", "format", "formatversion"));
+
     private final RequestQueue queue;
+    private final RetryScheduler scheduler;
 
-    public WikipediaApi(RequestQueue queue) { this.queue = queue; }
+    public WikipediaApi(RequestQueue queue) { this(queue, RetryScheduler.mainThread()); }
 
-    public static String buildSearchUrl(String query, int offset, int limit) {
-        return new Uri.Builder()
+    public WikipediaApi(RequestQueue queue, RetryScheduler scheduler) {
+        this.queue = queue;
+        this.scheduler = scheduler;
+    }
+
+    /**
+     * First page when {@code continuation} is null; otherwise every key of the previous
+     * response's {@code continue} object is sent back, as MediaWiki requires.
+     */
+    public static String buildSearchUrl(String query, @Nullable SearchContinuation continuation, int limit) {
+        Uri.Builder builder = new Uri.Builder()
                 .scheme("https").authority("vi.wikipedia.org")
                 .appendPath("w").appendPath("api.php")
                 .appendQueryParameter("action", "query")
@@ -33,14 +52,25 @@ public final class WikipediaApi {
                 .appendQueryParameter("srnamespace", "0")
                 .appendQueryParameter("srsearch", query)
                 .appendQueryParameter("srlimit", String.valueOf(limit))
-                .appendQueryParameter("sroffset", String.valueOf(offset))
                 .appendQueryParameter("format", "json")
-                .appendQueryParameter("formatversion", "2")
-                .build().toString();
+                .appendQueryParameter("formatversion", "2");
+        if (continuation != null) {
+            for (Map.Entry<String, String> param : continuation.getParams().entrySet()) {
+                if (!FIXED_SEARCH_PARAMS.contains(param.getKey())) {
+                    builder.appendQueryParameter(param.getKey(), param.getValue());
+                }
+            }
+        }
+        return builder.build().toString();
     }
 
-    public Cancelable search(String query, int offset, int limit, ApiCallback<JSONObject> callback) {
-        return get(buildSearchUrl(query, offset, limit), callback);
+    public static String buildSearchUrl(String query, int offset, int limit) {
+        return buildSearchUrl(query, offset > 0 ? SearchContinuation.ofOffset(offset) : null, limit);
+    }
+
+    public Cancelable search(String query, @Nullable SearchContinuation continuation, int limit,
+                             ApiCallback<JSONObject> callback) {
+        return get(buildSearchUrl(query, continuation, limit), callback);
     }
 
     public static String buildSummaryUrl(String title) {
@@ -67,7 +97,12 @@ public final class WikipediaApi {
 
     public void cancelAll() { queue.cancelAll(TAG); }
 
+    /** Every GET backs off and retries on 429/503 before the caller sees an error. */
     private Cancelable get(String url, ApiCallback<JSONObject> callback) {
+        return RetryingCall.start(attemptCallback -> send(url, attemptCallback), scheduler, callback);
+    }
+
+    private Cancelable send(String url, ApiCallback<JSONObject> callback) {
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 callback::onSuccess, error -> callback.onError(toException(error))) {
             @Override public Map<String, String> getHeaders() {
@@ -93,7 +128,8 @@ public final class WikipediaApi {
         }
         if (error.networkResponse != null) {
             int status = error.networkResponse.statusCode;
-            return new WikiApiException(WikiApiException.Kind.SERVER, "HTTP " + status, error, status);
+            long retryAfterMs = RetryAfter.fromHeaders(error.networkResponse.headers, System.currentTimeMillis());
+            return new WikiApiException(WikiApiException.Kind.SERVER, "HTTP " + status, error, status, retryAfterMs);
         }
         if (error instanceof NoConnectionError || error instanceof NetworkError) {
             return new WikiApiException(WikiApiException.Kind.NO_CONNECTION, "No connection", error);

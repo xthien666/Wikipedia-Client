@@ -23,6 +23,8 @@ public class SearchJsonMapperTest {
         assertEquals(2, page.getResults().size());
         assertEquals(1234, page.getTotalHits());
         assertEquals(Integer.valueOf(20), page.getNextOffset());
+        assertEquals("Every continue key is kept", "-||", page.getContinuation().getParams().get("continue"));
+        assertEquals("20", page.getContinuation().getParams().get("sroffset"));
         assertEquals(2330L, page.getResults().get(0).getPageId());
         assertEquals("Hà Nội", page.getResults().get(0).getTitle());
         assertEquals("Hà Nội là thủ đô \"nghìn năm\" & lớn", page.getResults().get(0).getSnippet());
@@ -34,6 +36,7 @@ public class SearchJsonMapperTest {
                 "{\"query\":{\"searchinfo\":{\"totalhits\":0},\"search\":[]}}"));
         assertTrue(page.getResults().isEmpty());
         assertNull(page.getNextOffset());
+        assertNull(page.getContinuation());
         assertEquals(0, page.getTotalHits());
     }
 

@@ -14,6 +14,8 @@
     <string name="search_error_no_connection">Không có kết nối mạng. Hãy kiểm tra Wi-Fi hoặc dữ liệu di động rồi thử lại.</string>
     <string name="search_error_timeout">Máy chủ phản hồi quá lâu. Hãy thử lại.</string>
     <string name="search_error_server">Máy chủ Wikipedia đang gặp lỗi. Hãy thử lại sau.</string>
+    <string name="search_error_rate_limited">Wikipedia đang giới hạn truy cập. Hãy chờ một lát rồi thử lại.</string>
+    <string name="search_error_rate_limited_wait">Wikipedia đang giới hạn truy cập. Hãy thử lại sau %1$d giây.</string>
     <string name="search_error_data">Dữ liệu nhận về không hợp lệ. Hãy thử lại.</string>
     <string name="search_error_unknown">Đã xảy ra lỗi không xác định. Hãy thử lại.</string>
     <string name="search_load_more_failed">Không tải thêm được kết quả.</string>
