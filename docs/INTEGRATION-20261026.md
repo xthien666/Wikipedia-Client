@@ -39,6 +39,10 @@ Bằng chứng local: build/member-integration-20261026/verified-build.log, unit
 
 Báo cáo đạt: build/member-integration-20261026/{tv1-final,reader,settings,combined}/report.json. Các lượt fixture lỗi ban đầu và bước sửa tham số adb vẫn giữ ở tv1/report.json và tv1-retest/report.json; dữ liệu đã được khôi phục sau mỗi lượt.
 
+## Kiểm tra CI sau khi push
+
+Lượt GitHub Actions 40354501611 ở commit 137809a đạt host test nhưng lỗi 1/143 unit test trên Ubuntu: LocalRepositoriesTest.dataSurvivesReopen báo `table bookmarks already exists`. Test kho dữ liệu khởi động WikiApplication, trong khi AppContainer tự xếp tác vụ đọc lịch sử và test cũng xóa/mở lại cùng database. Bản sửa dùng Application thuần cho riêng lớp test này để nó sở hữu trọn vòng đời SQLite; giữ nguyên assertion, executor tuần tự và hai SDK23/28. Không đổi cơ sở dữ liệu production và không bỏ qua test. Build/lint/unit local sau sửa đạt; log tại build/member-integration-20261026/ci-isolation-build.log. Kết quả CI của bản sửa được kiểm tra riêng trên GitHub Actions, không dùng lượt lỗi làm bằng chứng PASS.
+
 ## Việc còn lại và giới hạn
 
 - TV5-QA-01 vẫn cần chạy lại trên Android17/API37: máy TV1 chỉ có AVD API36. Đã sửa cửa sổ reflow/resize có thể xóa vị trí và thêm hồi quy; ca xoay trên API36 đạt. Không dùng kết quả này để tuyên bố API37 đã được nghiệm thu.

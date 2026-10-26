@@ -18,7 +18,8 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = {23, 28})
+// Repository tests own the database lifecycle; do not start AppContainer background reads.
+@Config(sdk = {23, 28}, application = android.app.Application.class)
 public class LocalRepositoriesTest {
     private Context context;
     private WikiDatabaseHelper helper;
