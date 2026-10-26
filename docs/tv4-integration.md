@@ -58,3 +58,13 @@ Here, `this` is the history Fragment. HistoryEntry is in `data.model`; ArticleNa
 - Clearing history does not remove bookmarks.
 - Only metadata is stored. Reading articles still requires a network connection.
 - TV1's legacy SharedPreferences history is validated and imported in a transaction. The old entries are removed only after import succeeds; malformed input remains available for retry or an explicitly confirmed reset.
+
+## Library lifecycle checks
+
+Failed deletions stay pending across background/foreground refreshes. Retry repeats the failed write; if the write succeeded but reloading failed, retry only reloads. A new deletion replaces the previous retry target. Known rows remain visible during loading and failed writes.
+
+The removal dialog uses saved arguments and a Fragment result. Recreating the screen restores the selected article without deleting it automatically.
+
+Verification (23 October 2026): `assembleDebug`, `lintDebug`, and 40 unit tests passed. Tests cover failed deletion followed by background/foreground and retry, late callbacks, cancellation and confirmation after recreation, and repeated save/remove followed by database close/reopen. Lint still has warnings.
+
+Still to verify on the integrated reader: save an article, check its save button and library row, remove it in the library, return to the reader and check the button again. Repeat rapid save/remove, force-stop and reopen the app. This branch still has the prototype reader with saving disabled, so these end-to-end checks cannot pass here yet. Database reopen and Robolectric recreation do not replace a device force-stop test.

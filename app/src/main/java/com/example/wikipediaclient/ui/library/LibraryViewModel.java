@@ -36,6 +36,8 @@ public final class LibraryViewModel extends ViewModel {
     private final MutableLiveData<State> state = new MutableLiveData<>(
             new State(true, false, Collections.emptyList()));
     private Runnable retryAction;
+    private boolean deletionPending;
+    private boolean inFlight;
     private int generation;
     private volatile boolean cleared;
 
@@ -49,38 +51,56 @@ public final class LibraryViewModel extends ViewModel {
     public LiveData<State> getState() { return state; }
 
     /** Reloads on entering the screen, including after a bookmark changes in the reader. */
-    public void refresh() { execute(() -> { }); }
+    public void refresh() {
+        if (deletionPending) return;
+        execute(() -> { }, false);
+    }
 
     /** Removes one resolved bookmark, then reloads the remaining records. */
     public void remove(PersonalArticle article) {
-        execute(() -> repository.removeBookmark(article.getLanguage(), article.getPageId()));
+        execute(() -> repository.removeBookmark(article.getLanguage(), article.getPageId()), true);
     }
 
     /** Repeats the failed read or deletion instead of silently discarding the user's action. */
     public void retry() {
-        if (retryAction != null) execute(retryAction);
+        if (!inFlight && retryAction != null) execute(retryAction, deletionPending);
     }
 
-    /** Runs disk work in order and ignores results superseded by a newer request. */
-    private void execute(Runnable action) {
+    /** Keeps failed deletions pending and ignores callbacks from superseded requests. */
+    private void execute(Runnable action, boolean deleting) {
         int request = ++generation;
         retryAction = action;
-        state.setValue(new State(true, false, Collections.emptyList()));
+        deletionPending = deleting;
+        inFlight = true;
+        List<PersonalArticleEntry> knownRows = state.getValue().entries;
+        state.setValue(new State(true, false, knownRows));
         diskExecutor.execute(() -> {
+            boolean actionCompleted = false;
             try {
                 action.run();
+                actionCompleted = true;
                 List<PersonalArticleEntry> rows = repository.getBookmarks();
                 main.post(() -> {
                     if (!cleared && request == generation) {
+                        inFlight = false;
+                        deletionPending = false;
                         retryAction = null;
                         state.setValue(new State(false, false, rows));
                     }
                 });
             } catch (RuntimeException exception) {
                 Log.e("LibraryViewModel", "Bookmark operation failed", exception);
+                boolean deleted = deleting && actionCompleted;
                 main.post(() -> {
                     if (!cleared && request == generation) {
-                        state.setValue(new State(false, true, Collections.emptyList()));
+                        inFlight = false;
+                        if (deleted) {
+                            // The write succeeded; retry only the read, not the deletion.
+                            deletionPending = false;
+                            retryAction = () -> { };
+                        }
+                        state.setValue(new State(false, true,
+                                deleted ? Collections.emptyList() : knownRows));
                     }
                 });
             }

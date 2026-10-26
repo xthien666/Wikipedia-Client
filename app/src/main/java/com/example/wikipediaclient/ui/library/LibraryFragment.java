@@ -4,11 +4,9 @@ import android.os.Bundle;
 import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.example.wikipediaclient.R;
 import com.example.wikipediaclient.WikiApplication;
 import com.example.wikipediaclient.data.AppContainer;
@@ -22,7 +20,6 @@ public final class LibraryFragment extends Fragment implements BookmarkAdapter.L
     private FragmentLibraryBinding binding;
     private LibraryViewModel model;
     private BookmarkAdapter adapter;
-    private AlertDialog confirmation;
 
     /** Uses the project's library destination and layout. */
     public LibraryFragment() { super(R.layout.fragment_library); }
@@ -34,6 +31,9 @@ public final class LibraryFragment extends Fragment implements BookmarkAdapter.L
         AppContainer container = ((WikiApplication) requireActivity().getApplication()).getContainer();
         model = new ViewModelProvider(this, LibraryViewModel.factory(
                 container.getBookmarkRepository(), container.getDiskExecutor())).get(LibraryViewModel.class);
+        getChildFragmentManager().setFragmentResultListener(
+                RemoveBookmarkDialog.RESULT, getViewLifecycleOwner(), (key, result) ->
+                        model.remove(RemoveBookmarkDialog.articleFrom(result)));
         adapter = new BookmarkAdapter(this, container.getThumbnails());
         adapter.setStateRestorationPolicy(BookmarkAdapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY);
         binding.bookmarkList.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -54,7 +54,9 @@ public final class LibraryFragment extends Fragment implements BookmarkAdapter.L
 
     /** Shows one of loading, error, empty, or populated states. */
     private void render(LibraryViewModel.State state) {
-        binding.bookmarkList.setVisibility(View.GONE);
+        adapter.submitList(state.entries);
+        binding.chipFavAll.setText(getString(R.string.bookmark_all, state.entries.size()));
+        binding.bookmarkList.setVisibility(state.entries.isEmpty() ? View.GONE : View.VISIBLE);
 
         if (state.loading) {
             binding.status.showLoading(R.string.bookmark_loading);
@@ -63,8 +65,6 @@ public final class LibraryFragment extends Fragment implements BookmarkAdapter.L
             ((android.widget.TextView) binding.status.findViewById(R.id.status_action))
                     .setText(R.string.bookmark_retry);
         } else {
-            adapter.submitList(state.entries);
-            binding.chipFavAll.setText(getString(R.string.bookmark_all, state.entries.size()));
             if (state.entries.isEmpty()) {
                 binding.status.showEmpty(R.drawable.ic_bookmark, R.string.bookmark_empty_title, R.string.bookmark_empty_message);
             } else {
@@ -81,18 +81,14 @@ public final class LibraryFragment extends Fragment implements BookmarkAdapter.L
 
     /** Confirms deletion while keeping the operation on the ViewModel's disk executor. */
     @Override public void onRemove(PersonalArticle article) {
-        if (confirmation != null) confirmation.dismiss();
-        confirmation = new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.bookmark_remove_title)
-                .setMessage(getString(R.string.bookmark_remove_message, article.getTitle()))
-                .setNegativeButton(R.string.bookmark_cancel, null)
-                .setPositiveButton(R.string.bookmark_remove, (dialog, which) -> model.remove(article))
-                .show();
+        if (getChildFragmentManager().findFragmentByTag(RemoveBookmarkDialog.TAG) == null) {
+            RemoveBookmarkDialog.newInstance(article)
+                    .showNow(getChildFragmentManager(), RemoveBookmarkDialog.TAG);
+        }
     }
 
-    /** Releases view and dialog references when navigation destroys the screen. */
+    /** Releases view references when navigation destroys the screen. */
     @Override public void onDestroyView() {
-        if (confirmation != null) { confirmation.dismiss(); confirmation = null; }
         binding.bookmarkList.setAdapter(null);
         adapter = null;
         binding = null;
