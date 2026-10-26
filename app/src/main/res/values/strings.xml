@@ -127,7 +127,7 @@
     <string name="settings_version">Phiên bản ứng dụng</string>
     <string name="settings_version_val">WikiRead v%1$s (Bản thử nghiệm môn học Android)</string>
     <string name="settings_team">Nhóm phát triển</string>
-    <string name="settings_team_val">Tên nhóm, họ tên và MSSV của thành viên, lớp học: chờ nhóm cung cấp.</string>
+    <string name="settings_team_val">Đào Lê Xuân Thiên - 23BA14269\nNguyễn Ngọc Thịnh - 23BA14272\nNguyễn Minh Hoàng - 22BI13173\nNguyễn Trung Hiếu - 22BA13138</string>
     <string name="settings_source">Nguồn nội dung</string>
     <string name="settings_source_val">Bách khoa toàn thư mở Wikipedia (vi.wikipedia.org)</string>
     <string name="settings_license">Giấy phép nội dung Wikipedia</string>

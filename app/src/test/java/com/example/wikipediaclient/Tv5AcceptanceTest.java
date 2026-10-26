@@ -90,8 +90,8 @@ public class Tv5AcceptanceTest {
         lifecycle.recreate();idle();activity=lifecycle.get();
         assertTrue(activity.findViewById(R.id.btn_font_huge).isSelected());
     }
-    @Test public void aboutSeparatesContentFromAppCodeAndLeavesMissingTeamDetailsExplicit(){
-        settings();assertTrue(((TextView)activity.findViewById(R.id.tv_team_details)).getText().toString().contains("chờ nhóm"));
+    @Test public void aboutSeparatesContentFromAppCodeAndShowsProvidedTeamDetails(){
+        settings();assertEquals(activity.getString(R.string.settings_team_val), ((TextView)activity.findViewById(R.id.tv_team_details)).getText().toString());
         assertTrue(((TextView)activity.findViewById(R.id.tv_app_license)).getText().toString().contains("chưa công bố"));
         int[] ids={R.id.btn_about_source,R.id.btn_about_terms,R.id.btn_about_project};
         String[] urls={"https://vi.wikipedia.org/","https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use","https://github.com/xthien666/Wikipedia-Client"};
