@@ -131,7 +131,7 @@ Thay `emulator-5554` bằng serial thực tế. Script cần Python 3, APK debug
 
 ## Kiểm thử và CI
 
-Ngày 25/10/2026, bản tích hợp TV1/TV2/TV3/TV4/TV5 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **82/82 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle, tính bền vững của SQLite, thử lại thao tác ghi/xóa lỗi và nhận diện bài trong back stack theo pageId. GitHub Actions [run 6](https://github.com/xthien666/Wikipedia-Client/actions/runs/39803121581) đã build/test bản tích hợp TV1/TV3 trên Ubuntu; chưa xác nhận cài/chạy trên điện thoại thật hoặc máy của thành viên khác.
+Ngày 26/10/2026, bản tích hợp TV1/TV2/TV3/TV4/TV5 chạy thành công `assembleDebug`, `lintDebug` và `testDebugUnitTest`; **143/143 test đạt**, Lint không có lỗi chặn. Bộ kiểm tra bao phủ JSON/API, response cũ, phân trang chống trùng, UI/lifecycle, tính bền vững của SQLite, thử lại thao tác ghi/xóa lỗi và nhận diện bài trong back stack theo pageId. GitHub Actions [run 6](https://github.com/xthien666/Wikipedia-Client/actions/runs/39803121581) đã build/test bản tích hợp TV1/TV3 trên Ubuntu; chưa xác nhận cài/chạy trên điện thoại thật hoặc máy của thành viên khác.
 
 Hai test host `python -m unittest discover -s tools -p test_device_backup.py` kiểm tra script không xóa/ghi đè dữ liệu khi sao lưu thất bại giữa chừng; workflow CI cũng chạy hai ca này.
 
@@ -245,3 +245,16 @@ Reader cập nhật đạt **30/30 kiểm tra TV3** trên cùng APK: bài thật
 About đã điền bốn họ tên/MSSV được nhóm xác nhận. Build APK/AndroidTest thành công, 85/85 unit test đạt và lint có 0 lỗi, 99 cảnh báo. Chrome trên emulator đã tải bài gốc và giấy phép từ reader; Sharesheet dùng canonical URL. TalkBack emulator đã thử Tab/Enter vào Settings và chọn 14sp; chữ hệ thống 150% cuộn tới được About. Chưa chứng nhận nghe đọc/chạm trên Android thật.
 
 Lượt reader trên Android 17/API 37 đạt 16 assertion rồi dừng tại T08: xoay giữ đúng bài nhưng vị trí đọc vượt dung sai. TV1/TV3 cần kiểm chứng trên APK này. Các ca sau điểm dừng chưa chạy lại; không lấy kết quả cũ thay cho APK mới. Hồ sơ và ma trận mới: [TV5 ngày 26/10](docs/TV5-20261026.md), [đối chiếu rubric/cỡ chữ](docs/TV5-RUBRIC.md). Báo cáo/slide hiện là bản nhóm rà soát; rubric chính thức và nghiệm thu điện thoại còn chờ.
+
+
+## Hợp nhất các nhánh thành viên — 26/10/2026
+
+Đã review và hợp nhất `tv2-new` (96b1cef), `feature/tv4-library` (f0557a2), `feature/tv5-about-20261026` (3ef225a), giữ lịch sử tác giả và UI/thumbnail mới trên main. Các nhánh tìm kiếm/settings cũ đã nằm trong main từ trước.
+
+TV2 truyền đầy đủ continuation và xử lý backoff 429/503. Deadline Retry-After dùng chung cho search/reader ngăn manual retry gửi sớm; reader có đường phục hồi sau chờ. TV4 giữ ý định xóa lỗi, khôi phục dialog qua xoay; test được nối với SQLite store hiện tại và mạng giả cho Robolectric. About TV5 đã có bốn tên/MSSV, kèm báo cáo và đối chiếu rubric. Build/lint, 143 unit test và hai test host đạt.
+
+Reader tích hợp đạt 33 kiểm tra emulator API36, gồm xoay/Back, alias, toggle nhanh, source/share, process death có và mất mạng. Đã ngăn WebView reflow/viewport tạm rỗng ghi đè vị trí đọc. Lỗi T08 mà TV5 báo trên API37 vẫn cần chạy lại trên đúng môi trường đó; kết quả API36 không thay cho API37, điện thoại thật hoặc nghiệm thu TalkBack.
+
+[Đánh giá từng nhánh, sửa tích hợp và việc còn lại](docs/INTEGRATION-20261026.md).
+
+Bộ hồi quy TV1/TV4 mới đạt 12/12 nhóm, Settings/About đạt 2/2; cùng reader 33/33 là 47 kiểm tra emulator có phạm vi giao nhau, trên cùng APK. Xác nhận xóa yêu thích đã kiểm tra cả xoay máy, hủy và xác nhận. Dữ liệu, cài đặt xoay và mạng được khôi phục sau test.

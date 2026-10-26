@@ -68,3 +68,8 @@ The removal dialog uses saved arguments and a Fragment result. Recreating the sc
 Verification (23 October 2026): `assembleDebug`, `lintDebug`, and 40 unit tests passed. Tests cover failed deletion followed by background/foreground and retry, late callbacks, cancellation and confirmation after recreation, and repeated save/remove followed by database close/reopen. Lint still has warnings.
 
 Still to verify on the integrated reader: save an article, check its save button and library row, remove it in the library, return to the reader and check the button again. Repeat rapid save/remove, force-stop and reopen the app. This branch still has the prototype reader with saving disabled, so these end-to-end checks cannot pass here yet. Database reopen and Robolectric recreation do not replace a device force-stop test.
+
+
+## Integrated review — 26 October 2026
+
+Commit f0557a2 has been integrated with the current reader, TV2 networking, TV5 About, and the thumbnail UI from main. LibraryFragment retains the thumbnail adapter and receives the restored dialog result. Storage tests use the existing SqliteHistoryStore; UI tests inject networking while still exercising real SQLite. The combined suite passes 143 unit tests, including the TV4 API23/28 storage and lifecycle cases. On an API36 emulator, the TV1/TV4 suite passes 12 groups including bookmark confirmation rotation/cancel/confirm and persistence after restart; the reader suite passes 33 checks including rapid canonical bookmark toggles. See INTEGRATION-20261026.md. Physical-device/TalkBack and API37 acceptance remain separate work.

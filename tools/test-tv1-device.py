@@ -123,7 +123,11 @@ def set_history(value):
     adb("shell", "run-as", package, "tee", "shared_prefs/reading_history.xml",
         data=ET.tostring(document, encoding="utf-8", xml_declaration=True))
     shell("run-as", package, "rm", "-f", "shared_prefs/reading_history.xml.bak")
-    launch()
+    # Fixtures start a fresh task so orientation overrides from instrumentation cannot leak in.
+    # Normal launch() below still retains the task for the real process-death assertions.
+    shell("am", "start", "-W", "-f", "0x10008000", "-n", package + "/.MainActivity")
+    rotate(1)
+    rotate(0)
 
 
 def rotate(value):
