@@ -181,6 +181,25 @@ public class MainActivityTest {
         assertEquals(R.id.searchFragment, navigation(activity).getCurrentDestination().getId());
     }
 
+    @Test public void viewportResizeWithoutLayoutRangeDoesNotOverwriteReadingPosition() {
+        MainActivity activity = launch(); activity.findViewById(R.id.open_sample).performClick(); idle();
+        android.webkit.WebView web = activity.findViewById(R.id.article_body);
+        org.robolectric.shadows.ShadowWebView shadow = Shadows.shadowOf(web);
+        web.layout(0, 0, 400, 800);
+        shadow.getWebViewClient().onPageCommitVisible(web, shadow.getLastLoadDataWithBaseURL().baseUrl);
+        NavHostFragment host = (NavHostFragment) activity.getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+        androidx.fragment.app.Fragment reader = host.getChildFragmentManager().getPrimaryNavigationFragment();
+        com.example.wikipediaclient.ui.article.ArticleViewModel model = new androidx.lifecycle.ViewModelProvider(reader)
+                .get(com.example.wikipediaclient.ui.article.ArticleViewModel.class);
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(2));
+        int width = web.getWidth(), height = web.getHeight();
+        model.progress(.4f);
+        web.layout(0, 0, width + 200, Math.max(1, height / 2));
+        // Invoke the lifecycle callback before Robolectric remeasures the whole activity.
+        reader.onPause();
+        assertEquals(.4f, model.progress(), .0001f);
+    }
+
     @Test public void mainFrameErrorCannotBeRecordedAsSuccessfulArticleByLatePageFinished() {
         MainActivity activity = launch(); activity.findViewById(R.id.open_sample).performClick(); idle();
         android.webkit.WebView web = activity.findViewById(R.id.article_body);

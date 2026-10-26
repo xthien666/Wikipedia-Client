@@ -10,6 +10,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.example.wikipediaclient.MainActivity;
+import com.example.wikipediaclient.MainActivityTest;
 import com.example.wikipediaclient.R;
 import com.example.wikipediaclient.WikiApplication;
 import com.example.wikipediaclient.data.AppContainer;
@@ -31,7 +32,7 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowDialog;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28)
+@Config(sdk = 28, application = MainActivityTest.TestApplication.class)
 public class LibraryFragmentTest {
     private ActivityController<MainActivity> controller;
     private AppContainer container;

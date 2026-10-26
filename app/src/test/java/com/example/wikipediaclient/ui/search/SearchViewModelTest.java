@@ -221,7 +221,7 @@ public class SearchViewModelTest {
         model.setQuery("a"); executor.fire();
         assertNull("First page has no continuation", repository.last().continuation);
         repository.last().callback.onSuccess(
-                new SearchPage(results(1, 2), new SearchContinuation(cont), 100));
+                SearchPage.withContinuation(results(1, 2), new SearchContinuation(cont), 100));
 
         model.loadMore();
         assertEquals(new SearchContinuation(cont), repository.last().continuation);
@@ -231,11 +231,11 @@ public class SearchViewModelTest {
     @Test public void continuationWithoutOffsetStillPagesAndStopsWhenRepeated() {
         SearchContinuation token = new SearchContinuation(Collections.singletonMap("continue", "abc"));
         model.setQuery("a"); executor.fire();
-        repository.last().callback.onSuccess(new SearchPage(results(1), token, 10));
+        repository.last().callback.onSuccess(SearchPage.withContinuation(results(1), token, 10));
         assertTrue(model.getState().getValue().hasMore());
         model.loadMore();
         assertEquals(token, repository.last().continuation);
-        repository.last().callback.onSuccess(new SearchPage(results(2), token, 10)); // same token again
+        repository.last().callback.onSuccess(SearchPage.withContinuation(results(2), token, 10)); // same token again
         assertFalse("A repeated continuation must not loop", model.getState().getValue().hasMore());
     }
 
@@ -292,7 +292,7 @@ public class SearchViewModelTest {
         cont.put("sroffset", "20");
         cont.put("continue", "-||");
         model.setQuery("a"); executor.fire();
-        repository.last().callback.onSuccess(new SearchPage(results(1, 2), new SearchContinuation(cont), 50));
+        repository.last().callback.onSuccess(SearchPage.withContinuation(results(1, 2), new SearchContinuation(cont), 50));
         model.loadMore();
         repository.last().callback.onError(new WikiApiException(
                 WikiApiException.Kind.SERVER, "HTTP 429", null, 429, 5_000));

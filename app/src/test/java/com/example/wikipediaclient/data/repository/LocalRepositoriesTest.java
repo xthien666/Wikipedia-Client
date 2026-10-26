@@ -23,7 +23,7 @@ public class LocalRepositoriesTest {
     private Context context;
     private WikiDatabaseHelper helper;
     private BookmarkRepository bookmarks;
-    private HistoryRepository history;
+    private SqliteHistoryStore history;
     private ExecutorService executor;
     private final PersonalArticle a = article(1, "Hà Nội");
     private final PersonalArticle b = article(2, "Kinh Bắc");
@@ -43,7 +43,7 @@ public class LocalRepositoriesTest {
     private void reopen() {
         helper = new WikiDatabaseHelper(context);
         bookmarks = new LocalBookmarkRepository(helper);
-        history = new LocalHistoryRepository(helper);
+        history = new SqliteHistoryStore(helper);
     }
     /** Waits for a disk operation and propagates assertion failures to JUnit. */
     private void onDisk(Runnable check) throws Exception { executor.submit(check).get(20, TimeUnit.SECONDS); }

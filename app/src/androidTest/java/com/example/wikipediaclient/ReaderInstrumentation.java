@@ -172,6 +172,14 @@ public final class ReaderInstrumentation extends Instrumentation {
                     .submit(() -> ((WikiApplication)activity().getApplication()).getContainer().getBookmarkRepository().getBookmarks()).get();
             check(bookmarks.stream().anyMatch(e -> e.getArticle().getTitle().equals("Hệ Mặt Trời")), "T07 reader saves canonical B, never A");
             verifySourceActions("article B");
+            runOnMainSync(() -> {
+                for (int i = 0; i < 4; i++) activity().findViewById(R.id.action_save).performClick();
+            }); drainDisk();
+            long displayedPageId = displayedContent().article.getPageId();
+            check(((WikiApplication)activity().getApplication()).getContainer().getDiskExecutor()
+                    .submit(() -> ((WikiApplication)activity().getApplication()).getContainer().getBookmarkRepository()
+                    .isBookmarked("vi", displayedPageId)).get(),
+                    "T09 rapid reader toggles preserve the final canonical bookmark state");
             screenshot("reader-solar-system");
             stage = "Back A"; back(); ready();
             check(title().equals("Hà Nội"), "T07 Back restores article A metadata");
@@ -185,6 +193,8 @@ public final class ReaderInstrumentation extends Instrumentation {
             while (current.get() == before && System.currentTimeMillis()<deadline) Thread.sleep(100);
             ready();
             check(title().equals("Hà Nội"), "T08 rotation keeps article identity");
+            report.put("beforeRotationProgress", saved);
+            report.put("afterRotationProgress", progress());
             check(withinScreen(saved), "T08 rotation restores reading position");
             screenshot("reader-landscape");
             stage = "external links";

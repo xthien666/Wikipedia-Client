@@ -15,4 +15,5 @@
     <string name="reader_share_link">Chia sẻ</string>
     <string name="reader_source">Bài gốc</string>
     <string name="reader_renderer_error">Trình hiển thị đã dừng. Quay lại danh sách để mở lại bài.</string>
+    <string name="reader_rate_limit_wait">Wikipedia yêu cầu chờ %1$d giây. Bạn có thể thử lại; yêu cầu sẽ được gửi sau thời gian chờ.</string>
 </resources>

@@ -37,7 +37,7 @@ public final class SearchJsonMapper {
         }
         JSONObject searchInfo = query.optJSONObject("searchinfo");
         int totalHits = searchInfo == null ? results.size() : searchInfo.optInt("totalhits", results.size());
-        return new SearchPage(results, parseContinuation(root.optJSONObject("continue")), totalHits);
+        return SearchPage.withContinuation(results, parseContinuation(root.optJSONObject("continue")), totalHits);
     }
 
     /** Keeps every key of {@code continue}; MediaWiki needs all of them on the next request. */

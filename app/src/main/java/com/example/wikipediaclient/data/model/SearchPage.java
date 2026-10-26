@@ -8,12 +8,15 @@ public final class SearchPage {
     private final List<SearchResult> results;
     @Nullable private final SearchContinuation continuation;
     private final int totalHits;
-    public SearchPage(List<SearchResult> results, @Nullable SearchContinuation continuation, int totalHits) {
+    private SearchPage(List<SearchResult> results, @Nullable SearchContinuation continuation, int totalHits) {
         this.results = Collections.unmodifiableList(new ArrayList<>(results));
         this.continuation = continuation;
         this.totalHits = totalHits;
     }
-    /** Offset-only form, kept for fakes and fixtures. */
+    public static SearchPage withContinuation(List<SearchResult> results, @Nullable SearchContinuation continuation, int totalHits) {
+        return new SearchPage(results, continuation, totalHits);
+    }
+    /** Offset-only form, kept for fakes and fixtures, including null for the final page. */
     public SearchPage(List<SearchResult> results, @Nullable Integer nextOffset, int totalHits) {
         this(results, nextOffset == null ? null : SearchContinuation.ofOffset(nextOffset), totalHits);
     }

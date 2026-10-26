@@ -30,6 +30,7 @@ public final class ArticleFragment extends Fragment {
     private ArticleSourceController sourceActions;
     private boolean displayed, restoring, touched, renderFailed, rendererGone;
     private float restoreProgress;
+    private int readingWidth, readingHeight;
     public ArticleFragment() { super(R.layout.fragment_article); }
     @android.annotation.SuppressLint("ClickableViewAccessibility") // Touch observation returns false; WebView retains all click/accessibility handling.
     @Override public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
@@ -37,7 +38,7 @@ public final class ArticleFragment extends Fragment {
         binding = FragmentArticleBinding.bind(view);
         sourceActions = new ArticleSourceController(requireContext(), binding.actionShare,
                 binding.btnViewOriginal, binding.articleLicense);
-        renderFailed = false; rendererGone = false;
+        renderFailed = false; rendererGone = false; readingWidth = 0; readingHeight = 0;
         AppContainer container = ((WikiApplication) requireActivity().getApplication()).getContainer();
         model = new ViewModelProvider(this, ArticleViewModel.factory(this, requireArguments(), container))
                 .get(ArticleViewModel.class);
@@ -57,7 +58,10 @@ public final class ArticleFragment extends Fragment {
         settings.setUserAgentString(settings.getUserAgentString() + " WikiRead/0.1");
         web.setBackgroundColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.surface));
         web.setOnTouchListener((v, event) -> {
-            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) { touched = true; restoring = false; }
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                touched = true; restoring = false;
+                readingWidth = web.getWidth(); readingHeight = web.getHeight();
+            }
             return false;
         });
         web.setOnScrollChangeListener((v, x, y, oldX, oldY) -> {
@@ -122,8 +126,13 @@ public final class ArticleFragment extends Fragment {
                         : status == 429 || status == 503 ? R.string.reader_rate_limit
                         : state.error != null && state.error.getKind() == WikiApiException.Kind.DATA
                         ? R.string.reader_data_error : R.string.reader_network_error;
-                binding.status.showError(R.string.reader_error_title, getString(message),
-                        status == 404 || status == 429 || status == 503 ? null : model::retry);
+                String detail = getString(message);
+                if (state.error != null && state.error.isRateLimited() && state.error.getRetryAfterMs() > 0) {
+                    long ms = state.error.getRetryAfterMs();
+                    long seconds = ms / 1000 + (ms % 1000 == 0 ? 0 : 1);
+                    detail = getString(R.string.reader_rate_limit_wait, seconds);
+                }
+                binding.status.showError(R.string.reader_error_title, detail, status == 404 ? null : model::retry);
             }
         } else if (rendered != state.content) {
             rendered = state.content; displayed = false; restoring = true; touched = false; renderFailed = false;
@@ -150,6 +159,7 @@ public final class ArticleFragment extends Fragment {
         String anchor = requireArguments().getString("anchor");
         if (restoreProgress == 0 && anchor != null && !anchor.isEmpty()) {
             restoring = false;
+            readingWidth = view.getWidth(); readingHeight = view.getHeight();
             view.loadUrl(rendered.article.getCanonicalUrl() + "#" + Uri.encode(anchor));
             return;
         }
@@ -161,15 +171,23 @@ public final class ArticleFragment extends Fragment {
                 view.scrollTo(0, Math.round(restoreProgress * range));
             }, delay);
         }
-        view.postDelayed(() -> { if (binding != null && view == binding.articleBody) restoring = false; }, 1600);
+        view.postDelayed(() -> {
+            if (binding != null && view == binding.articleBody) {
+                restoring = false; readingWidth = view.getWidth(); readingHeight = view.getHeight();
+            }
+        }, 1600);
     }
     @SuppressWarnings("deprecation") private int scrollRange(WebView view) {
         return Math.max(0, Math.round(view.getContentHeight() * view.getScale()) - view.getHeight());
     }
     private void saveProgress() {
         if (binding == null || !displayed || restoring) return;
+        // Rotation can resize/reflow the old WebView before onPause/onSaveInstanceState.
+        // Keep its last reading ratio instead of overwriting it using the new viewport.
+        if (readingWidth != binding.articleBody.getWidth() || readingHeight != binding.articleBody.getHeight()) return;
         int range = scrollRange(binding.articleBody);
-        model.progress(range > 0 ? binding.articleBody.getScrollY() / (float) range : 0);
+        // A reflow/unlaid WebView can transiently report no scroll range.
+        if (range > 0) model.progress(binding.articleBody.getScrollY() / (float) range);
     }
     private void renderFailure() {
         displayed = false; renderFailed = true;

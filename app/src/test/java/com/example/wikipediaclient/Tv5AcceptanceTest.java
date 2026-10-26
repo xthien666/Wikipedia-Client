@@ -174,7 +174,7 @@ public class Tv5AcceptanceTest {
     }
     @Test public void t05MissingAndRateLimitedArticlesDoNotRetryAutomatically(){
         for(String title:new String[]{"Error404","Error429","Error503"}){
-            navigate(title);assertEquals(View.GONE,activity.findViewById(R.id.status_action).getVisibility());
+            navigate(title);assertEquals(title.equals("Error404") ? View.GONE : View.VISIBLE,activity.findViewById(R.id.status_action).getVisibility());
             assertFalse(activity.findViewById(R.id.action_share).isEnabled());
             assertEquals(Integer.valueOf(1),((TestApplication)activity.getApplication()).calls.get(title));
             activity.getOnBackPressedDispatcher().onBackPressed();idle();

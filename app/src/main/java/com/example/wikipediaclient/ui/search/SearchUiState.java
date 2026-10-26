@@ -53,7 +53,7 @@ public final class SearchUiState {
     /** Error that keeps the 429/503 detail so the screen can say how long to wait. */
     public static SearchUiState error(WikiApiException error) {
         long ms = error.getRetryAfterMs();
-        int seconds = ms < 0 ? -1 : (int) Math.min(Integer.MAX_VALUE, (ms + 999) / 1000);
+        int seconds = ms < 0 ? -1 : (int) Math.min(Integer.MAX_VALUE, ms / 1000 + (ms % 1000 == 0 ? 0 : 1));
         return new SearchUiState(Type.ERROR, Collections.emptyList(), false, false, false,
                 error.getKind(), error.isRateLimited(), seconds);
     }

@@ -31,12 +31,21 @@ public final class WikipediaApi {
 
     private final RequestQueue queue;
     private final RetryScheduler scheduler;
+    interface Clock { long now(); }
+    private final Clock clock;
+    private long retryNotBefore;
+    private final Set<ManagedCall> activeCalls = new HashSet<>();
 
     public WikipediaApi(RequestQueue queue) { this(queue, RetryScheduler.mainThread()); }
 
     public WikipediaApi(RequestQueue queue, RetryScheduler scheduler) {
+        this(queue, scheduler, android.os.SystemClock::elapsedRealtime);
+    }
+
+    WikipediaApi(RequestQueue queue, RetryScheduler scheduler, Clock clock) {
         this.queue = queue;
         this.scheduler = scheduler;
+        this.clock = clock;
     }
 
     /**
@@ -95,11 +104,67 @@ public final class WikipediaApi {
         return get(buildContentUrl(title), callback);
     }
 
-    public void cancelAll() { queue.cancelAll(TAG); }
+    public void cancelAll() {
+        for (ManagedCall call : new HashSet<>(activeCalls)) call.cancel();
+        queue.cancelAll(TAG);
+    }
 
-    /** Every GET backs off and retries on 429/503 before the caller sees an error. */
+    /** The shared server deadline also applies to manual retries and newly opened articles. */
     private Cancelable get(String url, ApiCallback<JSONObject> callback) {
-        return RetryingCall.start(attemptCallback -> send(url, attemptCallback), scheduler, callback);
+        ManagedCall call = new ManagedCall(url, callback);
+        activeCalls.add(call);
+        call.start();
+        return call;
+    }
+
+    private final class ManagedCall implements Cancelable {
+        final String url; final ApiCallback<JSONObject> callback;
+        Cancelable delegate; boolean finished;
+        ManagedCall(String url, ApiCallback<JSONObject> callback) { this.url = url; this.callback = callback; }
+        void start() {
+            delegate = RetryingCall.start(attempt -> {
+                DeferredSend send = new DeferredSend(url, attempt); send.run(); return send;
+            }, scheduler, new ApiCallback<JSONObject>() {
+                public void onSuccess(JSONObject value) {
+                    if (!finished) { finish(); callback.onSuccess(value); }
+                }
+                public void onError(WikiApiException error) {
+                    if (!finished) { finish(); callback.onError(error); }
+                }
+            });
+        }
+        void finish() { finished = true; activeCalls.remove(this); }
+        public void cancel() { finish(); if (delegate != null) delegate.cancel(); }
+    }
+
+    private final class DeferredSend implements Cancelable, Runnable {
+        final String url; final ApiCallback<JSONObject> callback;
+        Cancelable current; boolean cancelled;
+        DeferredSend(String url, ApiCallback<JSONObject> callback) { this.url = url; this.callback = callback; }
+        public void run() {
+            if (cancelled) return;
+            long remaining = retryNotBefore > clock.now() ? retryNotBefore - clock.now() : 0;
+            if (remaining > 0) {
+                scheduler.postDelayed(this, Math.min(remaining, 60_000L));
+                return;
+            }
+            current = send(url, new ApiCallback<JSONObject>() {
+                public void onSuccess(JSONObject value) { if (!cancelled) callback.onSuccess(value); }
+                public void onError(WikiApiException error) {
+                    if (cancelled) return;
+                    if (error.isRateLimited()) {
+                        long wait = error.getRetryAfterMs() >= 0 ? error.getRetryAfterMs() : 1_000;
+                        long now = clock.now();
+                        retryNotBefore = Math.max(retryNotBefore, wait > Long.MAX_VALUE - now ? Long.MAX_VALUE : now + wait);
+                    }
+                    callback.onError(error);
+                }
+            });
+        }
+        public void cancel() {
+            cancelled = true; scheduler.cancel(this);
+            if (current != null) current.cancel();
+        }
     }
 
     private Cancelable send(String url, ApiCallback<JSONObject> callback) {

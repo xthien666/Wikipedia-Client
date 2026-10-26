@@ -18,8 +18,9 @@ public final class RetryAfter {
         if (trimmed.isEmpty()) return -1;
         if (trimmed.matches("\\d+")) {
             try {
-                return Math.multiplyExact(Long.parseLong(trimmed), 1000L);
-            } catch (ArithmeticException | NumberFormatException e) {
+                long seconds = Long.parseLong(trimmed);
+                return seconds > Long.MAX_VALUE / 1000 ? Long.MAX_VALUE : seconds * 1000;
+            } catch (NumberFormatException e) {
                 return Long.MAX_VALUE;
             }
         }
