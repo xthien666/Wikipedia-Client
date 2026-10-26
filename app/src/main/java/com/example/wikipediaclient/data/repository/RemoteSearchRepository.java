@@ -1,4 +1,6 @@
 package com.example.wikipediaclient.data.repository;
+import androidx.annotation.Nullable;
+import com.example.wikipediaclient.data.model.SearchContinuation;
 import com.example.wikipediaclient.data.model.SearchPage;
 import com.example.wikipediaclient.data.remote.ApiCallback;
 import com.example.wikipediaclient.data.remote.Cancelable;
@@ -15,8 +17,9 @@ public final class RemoteSearchRepository implements SearchRepository {
     public RemoteSearchRepository(WikipediaApi api) { this.api = api; }
 
     @Override
-    public Cancelable search(String query, int offset, ApiCallback<SearchPage> callback) {
-        return api.search(query, offset, PAGE_SIZE, new ApiCallback<JSONObject>() {
+    public Cancelable search(String query, @Nullable SearchContinuation continuation,
+                             ApiCallback<SearchPage> callback) {
+        return api.search(query, continuation, PAGE_SIZE, new ApiCallback<JSONObject>() {
             @Override public void onSuccess(JSONObject json) {
                 SearchPage page;
                 try {

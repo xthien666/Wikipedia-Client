@@ -2,7 +2,13 @@ package com.example.wikipediaclient.data.remote;
 
 import static org.junit.Assert.*;
 import android.net.Uri;
+import com.android.volley.ClientError;
+import com.android.volley.Header;
 import com.android.volley.NetworkResponse;
+import com.example.wikipediaclient.data.model.SearchContinuation;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import com.android.volley.NoConnectionError;
 import com.android.volley.ParseError;
 import com.android.volley.ServerError;
@@ -39,5 +45,48 @@ public class WikipediaApiTest {
                 new ServerError(new NetworkResponse(503, new byte[0], false, 0, java.util.Collections.emptyList())));
         assertEquals(WikiApiException.Kind.SERVER, server.getKind());
         assertEquals(503, server.getStatusCode());
+        assertTrue(server.isRateLimited());
+        assertEquals(-1, server.getRetryAfterMs());
+    }
+
+    @Test public void firstPageHasNoContinuationParameters() {
+        Uri uri = Uri.parse(WikipediaApi.buildSearchUrl("Hà Nội", (SearchContinuation) null, 20));
+        assertNull(uri.getQueryParameter("sroffset"));
+        assertNull(uri.getQueryParameter("continue"));
+    }
+
+    @Test public void nextPageSendsBackEveryContinuationKey() {
+        Map<String, String> cont = new LinkedHashMap<>();
+        cont.put("sroffset", "20");
+        cont.put("continue", "-||");
+        Uri uri = Uri.parse(WikipediaApi.buildSearchUrl("Hà Nội", new SearchContinuation(cont), 20));
+        assertEquals("20", uri.getQueryParameter("sroffset"));
+        assertEquals("-||", uri.getQueryParameter("continue"));
+        assertEquals("Hà Nội", uri.getQueryParameter("srsearch"));
+    }
+
+    @Test public void continuationCannotOverrideTheQuery() {
+        Map<String, String> cont = new LinkedHashMap<>();
+        cont.put("sroffset", "20");
+        cont.put("srsearch", "khác");
+        cont.put("srlimit", "500");
+        Uri uri = Uri.parse(WikipediaApi.buildSearchUrl("Hà Nội", new SearchContinuation(cont), 20));
+        assertEquals(Collections.singletonList("Hà Nội"), uri.getQueryParameters("srsearch"));
+        assertEquals(Collections.singletonList("20"), uri.getQueryParameters("srlimit"));
+    }
+
+    @Test public void tooManyRequestsCarriesRetryAfter() {
+        WikiApiException limited = WikipediaApi.toException(new ClientError(new NetworkResponse(
+                429, new byte[0], false, 0, Collections.singletonList(new Header("Retry-After", "30")))));
+        assertEquals(WikiApiException.Kind.SERVER, limited.getKind());
+        assertEquals(429, limited.getStatusCode());
+        assertTrue(limited.isRateLimited());
+        assertEquals(30_000, limited.getRetryAfterMs());
+    }
+
+    @Test public void notFoundIsNotRateLimited() {
+        WikiApiException missing = WikipediaApi.toException(new ClientError(new NetworkResponse(
+                404, new byte[0], false, 0, Collections.emptyList())));
+        assertFalse(missing.isRateLimited());
     }
 }

@@ -1,9 +1,14 @@
 package com.example.wikipediaclient.data.remote;
+import androidx.annotation.Nullable;
 import androidx.core.text.HtmlCompat;
+import com.example.wikipediaclient.data.model.SearchContinuation;
 import com.example.wikipediaclient.data.model.SearchPage;
 import com.example.wikipediaclient.data.model.SearchResult;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,9 +37,23 @@ public final class SearchJsonMapper {
         }
         JSONObject searchInfo = query.optJSONObject("searchinfo");
         int totalHits = searchInfo == null ? results.size() : searchInfo.optInt("totalhits", results.size());
-        JSONObject cont = root.optJSONObject("continue");
-        Integer nextOffset = cont != null && cont.has("sroffset") ? cont.optInt("sroffset") : null;
-        return new SearchPage(results, nextOffset, totalHits);
+        return new SearchPage(results, parseContinuation(root.optJSONObject("continue")), totalHits);
+    }
+
+    /** Keeps every key of {@code continue}; MediaWiki needs all of them on the next request. */
+    @Nullable
+    static SearchContinuation parseContinuation(@Nullable JSONObject cont) {
+        if (cont == null) return null;
+        Map<String, String> params = new LinkedHashMap<>();
+        Iterator<String> keys = cont.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            Object value = cont.opt(key);
+            if (value == null || value == JSONObject.NULL
+                    || value instanceof JSONObject || value instanceof JSONArray) continue;
+            params.put(key, String.valueOf(value));
+        }
+        return params.isEmpty() ? null : new SearchContinuation(params);
     }
 
     /** Removes highlight tags and decodes entities (&quot;, &amp;, ...). */

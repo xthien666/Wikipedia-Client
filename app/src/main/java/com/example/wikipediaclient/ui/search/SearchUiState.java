@@ -16,9 +16,19 @@ public final class SearchUiState {
     private final boolean loadMoreFailed;
     private final boolean loadingMore;
     @Nullable private final WikiApiException.Kind errorKind;
+    private final boolean rateLimited;
+    private final int retryAfterSeconds;
 
     private SearchUiState(Type type, List<SearchResult> results, boolean hasMore,
                           boolean loadMoreFailed, boolean loadingMore, @Nullable WikiApiException.Kind errorKind) {
+        this(type, results, hasMore, loadMoreFailed, loadingMore, errorKind, false, -1);
+    }
+
+    private SearchUiState(Type type, List<SearchResult> results, boolean hasMore, boolean loadMoreFailed,
+                          boolean loadingMore, @Nullable WikiApiException.Kind errorKind,
+                          boolean rateLimited, int retryAfterSeconds) {
+        this.rateLimited = rateLimited;
+        this.retryAfterSeconds = retryAfterSeconds;
         this.type = type;
         this.results = Collections.unmodifiableList(new ArrayList<>(results));
         this.hasMore = hasMore;
@@ -40,6 +50,13 @@ public final class SearchUiState {
     public static SearchUiState error(WikiApiException.Kind kind) {
         return new SearchUiState(Type.ERROR, Collections.emptyList(), false, false, false, kind);
     }
+    /** Error that keeps the 429/503 detail so the screen can say how long to wait. */
+    public static SearchUiState error(WikiApiException error) {
+        long ms = error.getRetryAfterMs();
+        int seconds = ms < 0 ? -1 : (int) Math.min(Integer.MAX_VALUE, (ms + 999) / 1000);
+        return new SearchUiState(Type.ERROR, Collections.emptyList(), false, false, false,
+                error.getKind(), error.isRateLimited(), seconds);
+    }
     private static SearchUiState of(Type type) {
         return new SearchUiState(type, Collections.emptyList(), false, false, false, null);
     }
@@ -50,4 +67,8 @@ public final class SearchUiState {
     public boolean isLoadMoreFailed() { return loadMoreFailed; }
     public boolean isLoadingMore() { return loadingMore; }
     @Nullable public WikiApiException.Kind getErrorKind() { return errorKind; }
+    /** The server answered 429/503 even after the automatic retries. */
+    public boolean isRateLimited() { return rateLimited; }
+    /** Seconds the server asked us to wait, or -1 when unknown. */
+    public int getRetryAfterSeconds() { return retryAfterSeconds; }
 }
