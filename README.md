@@ -5,7 +5,7 @@
 
 | Thành viên | Phần phụ trách |
 |---|---|
-| TV1_Đào Lê Xuân Thiên-23BA14269 | Nền tảng, Gradle/manifest, navigation, common UI, UI lịch sử và tích hợp ,Reader, HTML/WebView, liên kết và trạng thái bài|
+| TV1-Đào Lê Xuân Thiên-23BA14269 | Nền tảng, Gradle/manifest, navigation, common UI, UI lịch sử và tích hợp ,Reader, HTML/WebView, liên kết và trạng thái bài|
 | TV2-Nguyễn Trung Hiếu-22BA13138 | API, model/mapping mạng và tìm kiếm |
 | TV3-Nguyễn Minh Hoàng-22BI13173 | Database, repository yêu thích/lịch sử và UI yêu thích |
 | TV4-Nguyễn Ngọc Thịnh-23BA14272 | Settings, nguồn/chia sẻ và kiểm thử tích hợp |
@@ -181,7 +181,7 @@ app/src/test/                     # Unit tests Robolectric
 
 ### Hợp đồng lịch sử để tích hợp reader
 
-`HistoryRepository` nằm trong `data/repository`, được nối với SQLite của TV4 qua lớp `data/local/LocalHistoryRepository`. Sau khi reader hiển thị **thành công nội dung thật**, TV3 gọi `getHistoryRepository().recordRead(new PersonalArticle("vi", resolvedPageId, resolvedTitle, canonicalUrl), System.currentTimeMillis())`. Lời gọi lịch sử này tự chạy trên disk executor; UI quan sát `observe()` để nhận loading/ready/error. Dùng metadata của response cuối sau redirect; không ghi khi chỉ mở màn hình mẫu, nhận summary hoặc tải bài lỗi. Các lời gọi BookmarkRepository vẫn là blocking và phải chạy trên `getDiskExecutor()`. Chi tiết hợp đồng chung: [TV4 integration](docs/tv4-integration.md).
+`HistoryRepository` nằm trong `data/repository`, được nối với SQLite của TV4 qua lớp `data/local/LocalHistoryRepository`. Sau khi reader hiển thị **thành công nội dung thật**, TV3 gọi `getHistoryRepository().recordRead(new PersonalArticle("vi", resolvedPageId, resolvedTitle, canonicalUrl), System.currentTimeMillis())`. Lời gọi lịch sử này tự chạy trên disk executor; UI quan sát `observe()` để nhận loading/ready/error. Dùng metadata của response cuối sau redirect; không ghi khi chỉ mở màn hình mẫu, nhận summary hoặc tải bài lỗi. Các lời gọi BookmarkRepository vẫn là blocking và phải chạy trên `getDiskExecutor()`.
 
 `retry()` của lịch sử thực hiện lại thao tác ghi/xóa gần nhất bị lỗi, hoặc tải lại khi chỉ lỗi đọc. `refresh()` giữ thông báo thao tác ghi/xóa thất bại cho đến khi người dùng thử lại hoặc yêu cầu một thao tác ghi khác. Retry được giữ trong phiên tiến trình hiện tại; không lưu thao tác chưa thành công qua process death. Xóa toàn bộ vẫn cần xác nhận trước lần yêu cầu đầu tiên.
 
