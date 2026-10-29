@@ -1,6 +1,14 @@
 # WikiRead — Wikipedia Client
 
 Ứng dụng Android phục vụ đồ án nhóm 4 thành viên, hướng tới tìm kiếm, đọc và quản lý bài viết Wikipedia tiếng Việt. Mã nguồn hiện tại là bản **prototype 0.1.0**: đã tích hợp tìm kiếm Wikipedia thật, reader toàn bài HTML/WebView, kho SQLite và UI yêu thích/lịch sử.
+## Phân công và tích hợp
+
+| Thành viên | Phần phụ trách |
+|---|---|
+| TV1_Đào Lê Xuân Thiên-23BA14269 | Nền tảng, Gradle/manifest, navigation, common UI, UI lịch sử và tích hợp ,Reader, HTML/WebView, liên kết và trạng thái bài|
+| TV2-Nguyễn Trung Hiếu-22BA13138 | API, model/mapping mạng và tìm kiếm |
+| TV3-Nguyễn Minh Hoàng-22BI13173 | Database, repository yêu thích/lịch sử và UI yêu thích |
+| TV4-Nguyễn Ngọc Thịnh-23BA14272 | Settings, nguồn/chia sẻ và kiểm thử tích hợp |
 
 ## Trạng thái chức năng
 
@@ -15,7 +23,7 @@
 | Cỡ chữ | Bốn mức, lưu bằng SharedPreferences và áp dụng cho preview và HTML reader |
 | Loading, rỗng, lỗi | StatusView cho tìm kiếm, reader, yêu thích và lịch sử; tìm kiếm có retry khi lỗi và retry tải thêm mà giữ kết quả đã tải |
 
-Dữ liệu yêu thích/lịch sử được lưu trong hai bảng SQLite riêng, khóa duy nhất `language + pageId`; cỡ chữ được lưu bằng SharedPreferences. Lịch sử cũ của TV1 được chuyển sang SQLite khi đọc kho lần đầu, giữ bản cũ nếu chưa chuyển thành công. Yêu thích/lịch sử bắt đầu trống trên cài mới, được cập nhật bằng metadata bài thật từ reader. Lưu yêu thích chỉ lưu liên kết, không tải nội dung offline. Xóa cache vẫn chưa triển khai; reader không hiển thị nút nghe tóm tắt. Bản hiện tại chưa hỗ trợ đọc ngoại tuyến.
+Dữ liệu yêu thích/lịch sử được lưu trong hai bảng SQLite riêng, khóa duy nhất `language + pageId`; cỡ chữ được lưu bằng SharedPreferences. Yêu thích/lịch sử bắt đầu trống trên cài mới, được cập nhật bằng metadata bài thật từ reader. Lưu yêu thích chỉ lưu liên kết, không tải nội dung offline. Xóa cache vẫn chưa triển khai; reader không hiển thị nút nghe tóm tắt. Bản hiện tại chưa hỗ trợ đọc ngoại tuyến.
 
 ## Công nghệ và cấu hình
 
@@ -177,84 +185,5 @@ app/src/test/                     # Unit tests Robolectric
 
 `retry()` của lịch sử thực hiện lại thao tác ghi/xóa gần nhất bị lỗi, hoặc tải lại khi chỉ lỗi đọc. `refresh()` giữ thông báo thao tác ghi/xóa thất bại cho đến khi người dùng thử lại hoặc yêu cầu một thao tác ghi khác. Retry được giữ trong phiên tiến trình hiện tại; không lưu thao tác chưa thành công qua process death. Xóa toàn bộ vẫn cần xác nhận trước lần yêu cầu đầu tiên.
 
-## Phân công và tích hợp
-
-| Thành viên | Phần phụ trách |
-|---|---|
-| TV1 | Nền tảng, Gradle/manifest, navigation, common UI, UI lịch sử và tích hợp |
-| TV2 | API, model/mapping mạng và tìm kiếm |
-| TV3 | Reader, HTML/WebView, liên kết và trạng thái bài |
-| TV4 | Database, repository yêu thích/lịch sử và UI yêu thích |
-| TV5 | Settings, nguồn/chia sẻ và kiểm thử tích hợp |
-
-Từ ngày 22/10/2026, cùng một người phụ trách cả TV1 và TV3; ký hiệu vai trò được giữ để đối chiếu kế hoạch và kiểm thử. Tìm kiếm, reader và lưu dữ liệu cá nhân đã tích hợp. Reader dùng metadata của bài đã resolve cho nội dung, yêu thích, lịch sử, nguồn và chia sẻ. Định danh đã hiển thị được lưu trong back stack để mở lại tên đích/ID sau alias không tạo màn hình trùng; locator để tải lại sau process death dùng title/ID canonical. Không truyền HTML dài qua navigation; không giữ Activity hoặc View trong ViewModel. HTTP/database cần nằm trong lớp dữ liệu, công việc blocking chạy ngoài main thread.
-
-Phần TV1/TV3 hiện được tích hợp trực tiếp trên `main`; trước khi push, chạy ba task build/lint/test ở trên và ghi rõ kiểm tra thiết bị đã thực hiện. Các phần khác có thể dùng nhánh ngắn và pull request theo quy trình nhóm. Thống nhất thay đổi Gradle, manifest, navigation và dependency dùng chung với TV1; thay đổi schema dữ liệu với TV4.
-
 Không commit SDK/JDK cục bộ, `local.properties`, output build, khóa ký, token hoặc khóa API. README này là tài liệu chung trên GitHub; kế hoạch, ghi chép và ảnh kiểm thử cá nhân chưa được đưa vào repository.
 
-## Reader TV3: luồng đọc và kiểm chứng
-
-`RemoteArticleRepository.getContent()` tải JSON `/w/rest.php/v1/page/{title}/with_html`. `ArticleContentMapper` giữ HTML, ID/title/key đã resolve, revision và giấy phép trong cùng `ArticleContent`. ViewModel giữ đối tượng này trong phiên; `SavedStateHandle` chỉ chứa locator và tỷ lệ cuộn, không chứa HTML/WebView/Activity. Sau process death, app tải lại nội dung hoặc hiển thị lỗi kết nối.
-
-`ArticleFragment` dùng `loadDataWithBaseURL()` và navigation native cho A → B → Back. Liên kết nội bộ dùng chung ArticleNavigator để bỏ mở trùng khi chạm nhanh. WebView chỉ điều hướng trong tài liệu với anchor; URL không hỗ trợ bị chặn. Sau callback hiển thị thành công, reader ghi lịch sử bằng ID cuối cùng và bật các thao tác cho đúng bài. Yêu thích chạy trên disk executor; lỗi ghi và thao tác thử lại được giữ khi reader tạm dừng/tiếp tục; cỡ chữ lấy từ ReaderSettings. Back/xoay máy phục hồi tỷ lệ cuộn và kiểm tra sai lệch tối đa một màn hình; người dùng chạm sẽ dừng tự phục hồi vị trí.
-
-Bộ nghiệm thu WebView thực chạy độc lập, cần cài cả APK app và APK androidTest:
-
-```powershell
-.\tools\build-local.ps1 -Tasks assembleDebug,assembleDebugAndroidTest,lintDebug,testDebugUnitTest
-adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk
-adb -s emulator-5554 install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-python tools/test-tv3-device.py --adb adb --serial emulator-5554
-# Thêm ca mất mạng khi process bị hủy, chỉ dành cho emulator:
-python tools/test-tv3-device.py --adb adb --serial emulator-5554 --offline-process-death
-```
-
-Script lưu báo cáo JSON, ảnh, crash log, SHA-256 APK và bản sao dữ liệu tại `build/tv3-device`. Nó kiểm tra bài thật/alias, Back, xoay máy, anchor chú thích, nguồn link ngoài, cỡ chữ, lưu đúng bài và process death thật; fixture riêng mô phỏng bảng rộng/ảnh hỏng. Script sao lưu rồi khôi phục database/preferences và thiết lập xoay trong `finally`. Tùy chọn `--offline-process-death` còn sao lưu/khôi phục Wi-Fi và dữ liệu di động; kiểm tra reader khôi phục bài từ HTTP cache nếu có, hoặc báo lỗi có thử lại. Báo cáo ghi rõ nhánh thực tế đã chạy, không coi HTTP cache là cam kết đọc ngoại tuyến. Không thao tác đồng thời trên thiết bị khi chạy.
-
-Ngày 22/10/2026: **23/23 kiểm tra emulator đạt**, Android 16/API 36, WebView 133.0.6943.137; database/preferences đã được đối chiếu khôi phục đúng từng byte. Không phát sinh crash app. Ảnh và JSON chi tiết nằm tại máy build, không lưu trong Git. Tên/phiên bản bài có thể thay đổi khi chạy lại với Wikipedia đang hoạt động. Ca chú thích lấy ID từ HTML đang hiển thị và chờ WebView cuộn; không phụ thuộc mã chú thích cố định. Mỗi lần instrumentation chỉ xuất ảnh của chính lần chạy đó.
-
-Chưa xác nhận trên điện thoại thật, TalkBack hoặc tablet. Bookmark không bảo đảm đọc ngoại tuyến; các tiện ích tương tác phụ thuộc JavaScript của Wikipedia nằm ngoài phạm vi. Ứng dụng là đồ án học tập, không phải ứng dụng chính thức của Wikimedia. Nguồn và giấy phép bài lấy từ response API và được hiển thị trong reader.
-
-
-## Bàn giao TV5 ngày 23/10/2026
-
-Component nguồn/chia sẻ ở `ui/source/ArticleSourceController`; About phân biệt nội dung Wikipedia và mã ứng dụng. Bản bàn giao giữ bốn mức 14/16/18/22 sp. Xem [hồ sơ và T01–T16](docs/TV5.md), [đặc tả cỡ chữ](docs/TV5-FONT-SPEC.md) và [kịch bản demo](docs/TV5-DEMO.md). Thông tin nhóm, Android thật/TalkBack và một số ca nghiệm thu còn chờ. Kết quả 79 unit test không có nghĩa toàn bộ T01–T16 đã đạt.
-
-
-## Tích hợp TV5 và hoàn thiện TV1/TV3 — 25/10/2026
-
-Nhánh `feature/tv5-settings` (commit `a00449e`) đã được review và hợp nhất, giữ lịch sử tác giả. Component nguồn/chia sẻ dùng đúng metadata đã commit; About có các liên kết nguồn/điều khoản/project, thông tin nhóm còn chờ cung cấp. Bộ nguyên trạng TV5 đạt 79 unit test; sau bổ sung hồi quy canonical identity của TV1/TV3, tổng 82 unit test và hai test host đạt. Build APK/AndroidTest và lint thành công.
-
-Reader tích hợp đạt 32 kiểm tra trên emulator Android 16/API 36, WebView 133.0.6943.137: HTML/link/anchor/bảng/ảnh, Back và xoay, alias/định danh, cỡ chữ, bookmark/history, source/share, process death có và mất mạng. Nguồn/chia sẻ được xác minh bằng Intent native chặn trước khi mở app ngoài; chưa xác nhận trình duyệt tải trang hay gửi tới người nhận. Ca mất mạng thực tế hiện lỗi kết nối và retry tải lại đúng bài sau khi mạng trở lại; dữ liệu, xoay, Wi-Fi và dữ liệu di động đã khôi phục. Đây là kết quả emulator, chưa phải nghiệm thu điện thoại thật/TalkBack.
-
-Hồi quy TV1 trên cùng APK đạt 11/11 nhóm kiểm tra; Settings/About thêm 2/2 kiểm tra qua cây UI thật. Tổng 45 kiểm tra của ba bộ có phạm vi giao nhau. Lần TV1 đầu dừng vì công cụ UI trả root rỗng khi WebView chuyển trang; script được bổ sung thử lại thao tác lấy cây UI tối đa ba lần và lần chạy lại đạt đủ, không đổi các assertion chức năng.
-
-## Cập nhật UX/UI — 25/10/2026
-
-Khám phá, yêu thích, lịch sử, reader và cài đặt dùng bố cục thẻ và typography mới. Thư viện đã Việt hóa; lịch sử nhóm theo ngày và hiển thị số bài từ dữ liệu thật. Cỡ chữ dùng nhóm nút Material có trạng thái chọn và preview. Ảnh đại diện bài viết được tải theo lô từ Wikipedia, có cache và placeholder; việc hủy tải ảnh gắn với vòng đời view và tái sử dụng hàng. Các nút tìm kiếm và chip chủ đề có vùng chạm tối thiểu 48dp.
-
-Mã hiện tại đã qua `assembleDebug`, `assembleDebugAndroidTest`, `lintDebug`, **85/85 unit test** và hai test host bảo vệ sao lưu dữ liệu. Lint có 0 lỗi và 100 cảnh báo, chủ yếu resource không dùng; vẫn còn cảnh báo layout khám phá lồng sâu và nhiều view. Bộ TV1 chạy trên APK cập nhật đạt **11/11 nhóm kiểm tra** trên emulator Android 16/API 36, không có crash mới và khôi phục đúng dữ liệu trước kiểm tra. Ba test mới kiểm tra hủy request ảnh trước khi gửi, đổi bài khi tái sử dụng view và giữ request khi vẫn còn view cần ảnh. Chưa xác nhận trên điện thoại thật, TalkBack hoặc tablet.
-
-Cài đặt đạt thêm bốn ca trên emulator: cả bốn mức chữ có trạng thái chọn và giá trị đúng; mức 22sp còn giữ sau khởi động lại; giao diện hoạt động ở font scale 1.3 khi hệ thống bật dark mode; màn hình ngang vẫn cuộn được. App tiếp tục dùng giao diện sáng theo thiết kế hiện tại. Preferences và thiết lập hệ thống đã được khôi phục, đối chiếu sau kiểm tra.
-
-Reader cập nhật đạt **30/30 kiểm tra TV3** trên cùng APK: bài thật, định danh canonical/alias, nguồn/chia sẻ, Back và vị trí đọc, xoay máy, cỡ chữ, bảng rộng/ảnh hỏng và khôi phục sau process death. Dữ liệu app đã khôi phục; lượt UX/UI này không chạy lại tùy chọn `--offline-process-death`. Bằng chứng của lượt kiểm tra lưu cục bộ tại `build/ux-review/` và không commit ảnh hay output build.
-
-## Cập nhật TV5 - 26/10/2026
-
-About đã điền bốn họ tên/MSSV được nhóm xác nhận. Build APK/AndroidTest thành công, 85/85 unit test đạt và lint có 0 lỗi, 99 cảnh báo. Chrome trên emulator đã tải bài gốc và giấy phép từ reader; Sharesheet dùng canonical URL. TalkBack emulator đã thử Tab/Enter vào Settings và chọn 14sp; chữ hệ thống 150% cuộn tới được About. Chưa chứng nhận nghe đọc/chạm trên Android thật.
-
-Lượt reader trên Android 17/API 37 đạt 16 assertion rồi dừng tại T08: xoay giữ đúng bài nhưng vị trí đọc vượt dung sai. TV1/TV3 cần kiểm chứng trên APK này. Các ca sau điểm dừng chưa chạy lại; không lấy kết quả cũ thay cho APK mới. Hồ sơ và ma trận mới: [TV5 ngày 26/10](docs/TV5-20261026.md), [đối chiếu rubric/cỡ chữ](docs/TV5-RUBRIC.md). Báo cáo/slide hiện là bản nhóm rà soát; rubric chính thức và nghiệm thu điện thoại còn chờ.
-
-
-## Hợp nhất các nhánh thành viên — 26/10/2026
-
-Đã review và hợp nhất `tv2-new` (96b1cef), `feature/tv4-library` (f0557a2), `feature/tv5-about-20261026` (3ef225a), giữ lịch sử tác giả và UI/thumbnail mới trên main. Các nhánh tìm kiếm/settings cũ đã nằm trong main từ trước.
-
-TV2 truyền đầy đủ continuation và xử lý backoff 429/503. Deadline Retry-After dùng chung cho search/reader ngăn manual retry gửi sớm; reader có đường phục hồi sau chờ. TV4 giữ ý định xóa lỗi, khôi phục dialog qua xoay; test được nối với SQLite store hiện tại và mạng giả cho Robolectric. About TV5 đã có bốn tên/MSSV, kèm báo cáo và đối chiếu rubric. Build/lint, 143 unit test và hai test host đạt.
-
-Reader tích hợp đạt 33 kiểm tra emulator API36, gồm xoay/Back, alias, toggle nhanh, source/share, process death có và mất mạng. Đã ngăn WebView reflow/viewport tạm rỗng ghi đè vị trí đọc. Lỗi T08 mà TV5 báo trên API37 vẫn cần chạy lại trên đúng môi trường đó; kết quả API36 không thay cho API37, điện thoại thật hoặc nghiệm thu TalkBack.
-
-[Đánh giá từng nhánh, sửa tích hợp và việc còn lại](docs/INTEGRATION-20261026.md).
-
-Bộ hồi quy TV1/TV4 mới đạt 12/12 nhóm, Settings/About đạt 2/2; cùng reader 33/33 là 47 kiểm tra emulator có phạm vi giao nhau, trên cùng APK. Xác nhận xóa yêu thích đã kiểm tra cả xoay máy, hủy và xác nhận. Dữ liệu, cài đặt xoay và mạng được khôi phục sau test.
